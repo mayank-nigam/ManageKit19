@@ -1,0 +1,80 @@
+/* Premium Loader Styles - Matching Application Green Theme */
+
+:root {
+    --loader-green-primary: #28a745;
+    --loader-green-light: #48c767;
+    --loader-overlay-bg: rgba(255, 255, 255, 0.85);
+}
+
+.loader-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: transparent;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    animation: loaderFadeIn 0.3s ease-in-out;
+}
+
+@keyframes loaderFadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+.loader-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 20px;
+    background: transparent;
+}
+
+.loader-message {
+    font-size: 14px;
+    font-weight: 500;
+    color: #4b5563;
+    margin: 0;
+    text-align: center;
+}
+
+.loader-spinner {
+    color: #2563eb;
+    animation: loaderSpin 1s linear infinite;
+}
+
+@keyframes loaderSpin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Adjustments for fixed full-page loader if needed */
+.loader-overlay.fixed {
+    position: fixed;
+}
+
+/* Media Query adjustments */
+@media (max-width: 768px) {
+    .loader-spinner.medium {
+        width: 48px;
+        height: 48px;
+    }
+
+    .loader-message {
+        font-size: 14px;
+    }
+}

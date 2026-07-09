@@ -1,0 +1,114 @@
+/* BannerModule.css */
+
+.banner-module-container {
+  padding: 24px;
+  background-color: #f8fafc; /* light gray background similar to layout */
+  min-height: 100vh;
+  position: relative;
+  transform: translateZ(0); /* This creates a containing block for fixed modals */
+}
+
+.banner-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.banner-title {
+  font-size: 24px;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0;
+}
+
+.banner-card {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+}
+
+.add-banner-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background-color: #16a34a; /* Kit19 Green */
+  color: white;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 6px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.add-banner-btn:hover {
+  background-color: #15803d;
+}
+
+/* Modal styling overrides to match theme */
+.system-banner-modal .ant-modal-content {
+  border-radius: 8px;
+  padding: 0;
+}
+
+.system-banner-modal .ant-modal-header {
+  padding: 16px 24px;
+  border-bottom: 1px solid #e2e8f0;
+  border-radius: 8px 8px 0 0;
+}
+
+.system-banner-modal .ant-modal-body {
+  padding: 24px;
+}
+
+.system-banner-modal .ant-modal-footer {
+  padding: 16px 24px;
+  border-top: 1px solid #e2e8f0;
+  margin-top: 0;
+}
+
+.form-group {
+  margin-bottom: 16px;
+}
+
+.form-label {
+  display: block;
+  font-size: 14px;
+  font-weight: 500;
+  color: #475569;
+  margin-bottom: 8px;
+}
+
+.form-input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  font-size: 14px;
+  transition: border-color 0.2s;
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: #16a34a;
+  box-shadow: 0 0 0 2px rgba(22, 163, 74, 0.2);
+}
+
+.status-badge {
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.status-active {
+  background-color: #dcfce7;
+  color: #166534;
+}
+
+.status-inactive {
+  background-color: #f1f5f9;
+  color: #475569;
+}

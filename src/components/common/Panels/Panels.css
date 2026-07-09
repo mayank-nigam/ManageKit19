@@ -1,0 +1,158 @@
+/* src/components/common/Panels/Panels.css */
+
+.universal-panel-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(15, 23, 42, 0.4);
+    backdrop-filter: blur(4px);
+    z-index: 9998;
+}
+
+.universal-right-panel {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    height: 100vh;
+    background: #ffffff;
+    z-index: 9999;
+    box-shadow: -10px 0 30px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.panel-header-v3 {
+    height: 60px;
+    padding: 0 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #ffffff;
+    border-bottom: none;
+    flex-shrink: 0;
+}
+
+.header-left-v3 {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.panel-close-btn.left {
+    padding: 4px;
+    border: none;
+    background: none;
+    color: #4b5563;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+
+.panel-close-btn.left:hover {
+    color: #000;
+}
+
+.panel-back-link {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    color: #374151;
+    font-size: 15px;
+    font-weight: 500;
+    text-decoration: none;
+    background: none;
+    border: none;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.panel-back-link:hover {
+    color: #0f172a;
+    background: #f1f5f9;
+}
+
+.panel-back-link svg {
+    color: #64748b;
+}
+
+.header-right-v3 {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.panel-close-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    background: none;
+    border: none;
+    color: #64748b;
+    cursor: pointer;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+}
+
+.panel-close-btn:hover {
+    background: #f1f5f9;
+    color: #0f172a;
+}
+
+.panel-content-v3 {
+    flex: 1;
+    overflow-y: auto;
+    background: #ffffff;
+    position: relative;
+    padding: 16px;
+    /* Added some default padding for the card look */
+}
+
+.panel-footer-v3 {
+    height: 80px;
+    padding: 0 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #ffffff;
+    border-top: 1px solid #f1f5f9;
+    flex-shrink: 0;
+}
+
+/* Custom scrollbar for panel content */
+.panel-content-v3::-webkit-scrollbar {
+    width: 6px;
+}
+
+.panel-content-v3::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.panel-content-v3::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 10px;
+}
+
+.panel-content-v3::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+
+/* Mobile Responsive */
+@media (max-width: 1024px) {
+    .universal-right-panel {
+        width: 85% !important;
+    }
+}
+
+@media (max-width: 768px) {
+    .universal-right-panel {
+        width: 100% !important;
+    }
+}

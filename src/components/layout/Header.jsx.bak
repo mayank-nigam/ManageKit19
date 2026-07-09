@@ -1,0 +1,73 @@
+import React from 'react';
+import { FiMenu, FiBell, FiSettings } from 'react-icons/fi';
+import { THEME } from '../../config/constants';
+
+const Header = ({ setSidebarOpen, sidebarCollapsed, setSidebarCollapsed }) => {
+  const user = { name: localStorage.getItem('FName') || 'User', email: localStorage.getItem('email') || 'user@example.com' };
+  const displayName = localStorage.getItem('DisplayName') || 'User';
+  
+
+  return (
+    <header className="bg-white border-b border-gray-200 h-16 flex items-center px-4 lg:px-6">
+      <div className="flex items-center justify-between w-full">
+        {/* Left section */}
+        <div className="flex items-center gap-4">
+          <button
+            onClick={() => setSidebarOpen(true)}
+            className="lg:hidden text-gray-600 hover:text-gray-900"
+          >
+            <FiMenu className="w-6 h-6" />
+          </button>
+
+          {/* Desktop collapse/expand toggle */}
+          <button
+            onClick={() => setSidebarCollapsed && setSidebarCollapsed(s => !s)}
+            className="hidden lg:inline-flex items-center justify-center text-gray-600 hover:text-gray-900 p-2 rounded"
+            title={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+          >
+            <FiMenu className="w-5 h-5" />
+          </button>
+
+          {/* Search bar */}
+          <div className="hidden md:flex items-center">
+            <div className="relative">
+              <span className="text-2xl font-extrabold text-green-600 leading-none uppercase">{displayName}</span>
+              </div>
+          </div>
+        </div>
+
+        {/* Right section */}
+        <div className="flex items-center gap-4">
+          {/* Notifications */}
+          <button className="relative text-gray-600 hover:text-gray-900">
+            <FiBell className="w-6 h-6" />
+            <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full text-xs text-white flex items-center justify-center">
+              3
+            </span>
+          </button>
+
+          {/* Settings */}
+          {/* <button className="text-gray-600 hover:text-gray-900">
+            <FiSettings className="w-6 h-6" />
+          </button> */}
+
+          {/* User avatar */}
+          {/* <div className="flex items-center gap-2">
+            <div className="hidden md:block text-right">
+              <p className="text-sm font-medium text-gray-900">{user?.name || 'User'}</p>
+             
+            </div>
+            <div
+              className="w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold"
+              style={{ backgroundColor: THEME.primary }}
+            >
+              {user?.name?.charAt(0) || 'U'}
+            </div>
+          </div> */}
+        </div>
+      </div>
+    </header>
+  );
+};
+
+export default Header;
