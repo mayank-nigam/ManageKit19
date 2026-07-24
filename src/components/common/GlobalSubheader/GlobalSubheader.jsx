@@ -12,7 +12,8 @@ const GlobalSubheader = ({
   onAddClick,
   searchPlaceholder = "Search...",
   onSearch,
-  searchConfig = []
+  searchConfig = [],
+  children
 }) => {
   const [searchValue, setSearchValue] = useState('');
   const [searchField, setSearchField] = useState(searchConfig.length > 0 ? searchConfig[0].key : 'all');
@@ -53,8 +54,8 @@ const GlobalSubheader = ({
         <h1>{title}</h1>
       </div>
 
-      {/* Middle Section: Search Bar */}
-      <div className="subheader-center-section">
+      {/* Middle Section: Search Bar & Custom Controls */}
+      <div className="subheader-center-section flex items-center gap-4">
         <div className="subheader-search-wrapper" style={{ paddingLeft: searchConfig.length > 0 ? '0' : '40px' }}>
           {searchConfig.length === 0 && <Search size={20} className="subheader-search-icon" />}
           
@@ -127,6 +128,13 @@ const GlobalSubheader = ({
           )}
 
         </div>
+
+        {/* Render children (like Radio Groups) next to the search wrapper */}
+        {children && (
+          <div className="flex items-center ml-4">
+            {children}
+          </div>
+        )}
       </div>
 
       {/* Right Section: Controls */}

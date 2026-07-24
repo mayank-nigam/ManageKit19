@@ -53,12 +53,21 @@ const API_ENDPOINTS = {
     banner: '/Common/CommonActionModebased',
     GET_USER_SEGMENTS: '/BannerSetting/GetSegmentNameList'
   },
-  AUTH: {
-    LOGIN: '/auth/login',
-    LOGOUT: '/auth/logout',
+  USER_AUTH: {
+    LOGIN: '/UserAuth/Login',
+    LOGOUT: '/UserAuth/Logout',
     REFRESH_TOKEN: '/auth/refresh',
     ME: '/auth/me',
     CHANGE_PASSWORD: '/auth/change-password'
+  },
+
+  MODULE_MASTER: {
+    GET_LIST: '/UserAuth/GetModuleMasterList',
+    GET_PARENT_MODULES: '/UserAuth/GetModuleMasterListModule',
+    GET_BY_ID: '/UserAuth/GetModuleMaster_ModuleId',
+    SAVE: '/UserAuth/SaveModuleMaster',
+    UPDATE: '/UserAuth/UpdateModuleMaster',
+    DELETE: '/UserAuth/DeleteModuleMaster'
   },
 
   ENQUIRIES: {

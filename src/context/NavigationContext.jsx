@@ -4,7 +4,7 @@ import API_ENDPOINTS from '../config/apiEndpoints';
 import {
   FiHome, FiUsers, FiUserPlus, FiCalendar, FiPhone, FiTarget,
   FiCheckSquare, FiMapPin, FiActivity, FiStar, FiTrello, FiClock,
-  FiFileText, FiDollarSign, FiCreditCard, FiBook, FiChevronRight, FiSettings, FiLayout, FiTrendingUp, FiFile, FiPercent, FiImage, FiRadio
+  FiFileText, FiDollarSign, FiCreditCard, FiBook, FiChevronRight, FiSettings, FiLayout, FiTrendingUp, FiFile, FiPercent, FiImage, FiRadio, FiLink, FiShield
 } from 'react-icons/fi';
 import { CopyPlus, ListFilterPlus, Merge } from 'lucide-react';
 
@@ -115,10 +115,12 @@ const MENU_MAPPING = {
   'Tax Settings': { name: 'Tax Settings', href: '/master-settings/tax-settings', icon: FiPercent },
   'Credit Note Settings': { name: 'Credit Note Settings', href: '/credit-notes/settings', icon: FiCreditCard },
 
-  'User Role': { name: 'User Role', href: '#', icon: FiUserPlus },
+  'User Role': { name: 'User Role', href: '/roles/user-role', icon: FiUserPlus },
   'Manage Team': { name: 'Manage Team', href: '#', icon: FiUsers },
-  'User Role Mapping': { name: 'User Role Mapping', href: '#', icon: FiMapPin },
-  'Role Permission Mapping': { name: 'Role Permission Mapping', href: '#', icon: FiCheckSquare },
+  'Team Master': { name: 'Team Master', href: '/roles/team-master', icon: FiUsers },
+  'User Role Mapping': { name: 'User Role Mapping', href: '/roles/user-role-mapping', icon: FiLink },
+  'Role Permission Mapping': { name: 'Role Permission Mapping', href: '/roles/role-permission-mapping', icon: FiShield },
+  'Field Masking': { name: 'Field Masking', href: '/roles/field-masking', icon: FiLayout },
   'Collaborator Team': { name: 'Collaborator Team', href: '/master-settings/collaborator-team', icon: FiUsers },
   'CollaboratorType': { name: 'CollaboratorType', href: '/master-settings/collaborator-type', icon: FiUsers },
   'User Hierarchy': { name: 'User Hierarchy', href: '/master-settings/user-hierarchy', icon: FiUsers }
@@ -146,8 +148,8 @@ export const NavigationProvider = ({ children }) => {
           icon: FiSettings,
           href: '#',
           subItems: [
-            { name: 'General Settings', href: '/settings/general', icon: FiSettings },
-            { name: 'User Management', href: '/settings/users', icon: FiUsers },
+            // { name: 'General Settings', href: '/settings/general', icon: FiSettings },
+            // { name: 'User Management', href: '/settings/users', icon: FiUsers },
             { name: 'Banner Management', href: '/banner', icon: FiImage },
             { name: 'System Updates', href: '/updates', icon: FiRadio },
             { name: 'Help Management', href: '/help', icon: FiBook }
@@ -155,20 +157,27 @@ export const NavigationProvider = ({ children }) => {
         },
         {
           name: 'Roles & Rights',
-          icon: FiUsers,
+          icon: FiShield,
           href: '#',
           subItems: [
-            { name: 'User Role', href: '/roles/user-role', icon: FiUserPlus }
+            { name: 'User Role', href: '/roles/user-role', icon: FiUserPlus },
+            { name: 'Team Master', href: '/roles/team-master', icon: FiUsers },
+            { name: 'User Role Mapping', href: '/roles/user-role-mapping', icon: FiUsers },
+            { name: 'Role Permission Mapping', href: '/roles/role-permission-mapping', icon: FiLayout },
+            { name: 'Field Masking', href: '/roles/field-masking', icon: FiLayout },
+            ...(getSession().userId === 335 ? [{ name: 'Module Master', href: '/roles/module-master', icon: FiLayout }] : []),
+            { name: 'Collaborator Team', href: '/master-settings/collaborator-team', icon: FiUsers },
+            { name: 'Collaborator Type', href: '/master-settings/collaborator-type', icon: FiUsers }
           ]
         },
-        {
-          name: 'Reports',
-          icon: FiLayout,
-          href: '#',
-          subItems: [
-            { name: 'Activity Report', href: '/report-pages/activity', icon: FiActivity }
-          ]
-        }
+        // {
+        //   name: 'Reports',
+        //   icon: FiLayout,
+        //   href: '#',
+        //   subItems: [
+        //     { name: 'Activity Report', href: '/report-pages/activity', icon: FiActivity }
+        //   ]
+        // }
       ];
 
       setNavigation(finalNav);

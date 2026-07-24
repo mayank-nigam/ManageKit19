@@ -13,6 +13,7 @@ import { IoMdSync } from "react-icons/io";
 import { CopyPlus, ListFilterPlus, Merge } from 'lucide-react';
 import { handleLogout } from '../../utils/logout';
 import { useNavigationContext } from '../../context/NavigationContext';
+import { getSession } from '../../getSession';
 import Tooltip from '@mui/material/Tooltip';
 
 const MenuItem = ({ item, depth = 0, location, expandedMenus, toggleMenu, isOpen }) => {
@@ -106,7 +107,15 @@ const MenuItem = ({ item, depth = 0, location, expandedMenus, toggleMenu, isOpen
 const Sidebar = ({ isOpen, setIsOpen, collapsed = false, setCollapsed = null, isLocked = false, onMouseEnter, onMouseLeave }) => {
   const location = useLocation();
   const navigate = useNavigate()
-  const username = localStorage.getItem('FName') || 'User';
+  const { FName, LName, LoginName } = getSession();
+  let username = 'User';
+  if (FName && LName) {
+    username = `${FName} ${LName}`;
+  } else if (LoginName) {
+    username = LoginName;
+  } else if (localStorage.getItem('FName')) {
+    username = localStorage.getItem('FName');
+  }
   
   const partnerLogo = localStorage.getItem('Logo') || 'https://docs.kit19.com/assets/custom/partner/resource/10043/logobig.PNG';
   const companyName = localStorage.getItem('CompanyName') || localStorage.getItem('DisplayName') || 'Sales CRM';

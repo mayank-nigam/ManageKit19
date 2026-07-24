@@ -31,6 +31,19 @@ const GlobalRouteGuard = ({ children }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const [isValidating, setIsValidating] = useState(false);
+  const [isInitializing, setIsInitializing] = useState(true);
+
+  useEffect(() => {
+    const token = localStorage.getItem('API_TOKEN');
+    const isPublicRoute = globalWhiteList.includes(location.pathname);
+
+    // If no token and trying to access protected route, kick to login
+    if (!token && !isPublicRoute && location.pathname !== '/login') {
+      navigate('/login');
+      return;
+    }
+    setIsInitializing(false);
+  }, [location.pathname, navigate]);
   
   const cleanPath = location.pathname.endsWith('/') ? location.pathname.slice(0, -1) : location.pathname;
   const isGlobalRoute = globalWhiteList.includes(cleanPath) || 

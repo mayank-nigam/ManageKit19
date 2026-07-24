@@ -8,7 +8,7 @@ export const getToken = () => {
 
 export const getSession = () => {
   const token = getToken();
-  const userId = parseInt(localStorage.getItem('userId') || localStorage.getItem('kit_userId'), 10);
+  const userId = parseInt(localStorage.getItem('userId') || localStorage.getItem('USER_ID') || localStorage.getItem('kit_userId'), 10);
   const parentId = parseInt(localStorage.getItem('ParentID') || localStorage.getItem('kit_parentId'), 10);
 
 

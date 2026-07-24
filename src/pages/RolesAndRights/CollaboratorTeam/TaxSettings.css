@@ -1,0 +1,78 @@
+/* src/pages/Master_Settings/TaxSettings.css */
+
+.tax-settings-container .ant-table-wrapper .ant-table {
+  border-radius: 0.5rem;
+  overflow: hidden;
+}
+
+.tax-settings-container .ant-table-thead > tr > th {
+  background: #f8fafc;
+  color: #475569;
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 12px;
+  letter-spacing: 0.05em;
+  padding: 16px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.tax-settings-container .ant-table-tbody > tr > td {
+  padding: 16px;
+  border-bottom: 1px solid #f1f5f9;
+  color: #334155;
+}
+
+.tax-settings-container .ant-table-tbody > tr:hover > td {
+  background: #f8fafc;
+}
+
+/* Customize Pagination */
+.tax-settings-container .ant-pagination {
+  margin-top: 16px;
+  margin-bottom: 16px;
+  padding-right: 16px;
+}
+
+.tax-settings-container .ant-pagination-item-active {
+  border-color: #16a34a;
+  background-color: #f0fdf4;
+}
+
+.tax-settings-container .ant-pagination-item-active a {
+  color: #16a34a;
+}
+
+/* Customize Drawer */
+.tax-settings-drawer .ant-drawer-header {
+  border-bottom: 1px solid #f1f5f9;
+  padding: 16px 24px;
+}
+
+.tax-settings-drawer .ant-drawer-body {
+  padding: 24px;
+}
+
+.tax-settings-drawer .ant-drawer-footer {
+  border-top: 1px solid #f1f5f9;
+}
+
+/* Switches */
+.ant-switch.bg-gray-300 {
+  background-color: #cbd5e1;
+}
+
+.ant-switch.ant-switch-checked.bg-green-500 {
+  background-color: #22c55e !important;
+}
+
+/* Dropdown styling overriding */
+.ant-dropdown-menu {
+  padding: 4px;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.ant-dropdown-menu-item {
+  padding: 8px 12px;
+  border-radius: 4px;
+}
