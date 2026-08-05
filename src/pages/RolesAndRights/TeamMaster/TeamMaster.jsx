@@ -270,18 +270,21 @@ const TeamMaster = () => {
       dataIndex: 'TeamName',
       key: 'TeamName',
       width: '30%',
+      sorter: (a, b) => (a.TeamName || '').localeCompare(b.TeamName || ''),
     },
     {
       title: 'Created By',
       dataIndex: 'CreatedUser',
       key: 'CreatedUser',
       width: '20%',
+      sorter: (a, b) => (a.CreatedUser || '').localeCompare(b.CreatedUser || ''),
     },
     {
       title: 'Created On',
       dataIndex: 'CreatedDate',
       key: 'CreatedDate',
       width: '20%',
+      sorter: (a, b) => new Date(a.CreatedDate || 0) - new Date(b.CreatedDate || 0),
       render: (date) => date ? dayjs(date).format('DD-MMM-YYYY hh:mm A') : '',
     },
     {
@@ -289,6 +292,7 @@ const TeamMaster = () => {
       dataIndex: 'Active',
       key: 'Active',
       width: '15%',
+      sorter: (a, b) => Number(a.Active || false) - Number(b.Active || false),
       render: (active, record) => (
         <Switch 
           checked={active} 
@@ -351,6 +355,7 @@ const TeamMaster = () => {
             rowKey="TeamId" 
             loading={loading}
             pagination={{ pageSize: 15 }}
+            selectable={false}
           />
         </div>
       </div>

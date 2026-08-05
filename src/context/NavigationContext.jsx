@@ -143,7 +143,7 @@ export const NavigationProvider = ({ children }) => {
       // Hardcoded Admin Navigation Structure
       const finalNav = [
         { name: 'Dashboard', href: '/', icon: FiHome },
-        {
+        ...(getSession().userId === 335 ? [{
           name: 'Settings',
           icon: FiSettings,
           href: '#',
@@ -154,7 +154,7 @@ export const NavigationProvider = ({ children }) => {
             { name: 'System Updates', href: '/updates', icon: FiRadio },
             { name: 'Help Management', href: '/help', icon: FiBook }
           ]
-        },
+        }] : []),
         {
           name: 'Roles & Rights',
           icon: FiShield,

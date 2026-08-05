@@ -177,7 +177,7 @@ const UserRole = () => {
   const handleToggleStatus = async (roleId, newStatus) => {
     try {
       const role = roles.find(r => r.RoleId === roleId);
-      const response = await fetchApi(`${NEWV3_BASE_URL}UserAuth/UpdateRoleMaster`, {
+      const response = await fetchApi(`${NEWV3_BASE_URL}UserAuth/UpdateRoleMasterStatus`, {
         Token: API_TOKEN,
         LoggedUserId: USER_ID,
         Message: "",
@@ -186,9 +186,7 @@ const UserRole = () => {
         Details: { 
           Mode: "U", 
           RoleId: roleId, 
-          RoleName: role?.RoleName || '',
-          RoleCode: role?.RoleCode || '',
-          Active: newStatus, 
+          Status: newStatus, 
           UserId: USER_ID 
         }
       });
@@ -207,29 +205,22 @@ const UserRole = () => {
       dataIndex: 'RoleName',
       key: 'RoleName',
       width: '20%',
-    },
-    {
-      title: 'Peer View',
-      dataIndex: 'PeerView',
-      key: 'PeerView',
-      width: '10%',
-      render: (peerView) => (
-        <span className={peerView ? 'text-green-600 font-medium' : 'text-gray-500'}>
-          {peerView ? 'True' : 'False'}
-        </span>
-      ),
+      sorter: (a, b) => (a.RoleName || '').localeCompare(b.RoleName || ''),
+
     },
     {
       title: 'Created By',
       dataIndex: 'CreatedUser',
       key: 'CreatedUser',
       width: '15%',
+      sorter: (a, b) => (a.CreatedUser || '').localeCompare(b.CreatedUser || ''),
     },
     {
       title: 'Created On',
       dataIndex: 'CreatedDate',
       key: 'CreatedDate',
       width: '20%',
+      sorter: (a, b) => new Date(a.CreatedDate || 0) - new Date(b.CreatedDate || 0),
       render: (date) => date ? dayjs(date).format('DD-MMM-YYYY hh:mm A') : '',
     },
     {
@@ -237,12 +228,14 @@ const UserRole = () => {
       dataIndex: 'Active',
       key: 'Active',
       width: '15%',
+      sorter: (a, b) => Number(a.Active || false) - Number(b.Active || false),
       render: (active, record) => (
         <Switch 
           checked={active} 
           onChange={(checked) => handleToggleStatus(record.RoleId, checked)}
           checkedChildren="Active"
           unCheckedChildren="Inactive"
+          disabled={['admin', 'user', 'guest'].includes((record.RoleName || '').toLowerCase())}
         />
       ),
     },
@@ -250,26 +243,32 @@ const UserRole = () => {
       title: 'Actions',
       key: 'actions',
       width: '10%',
-      render: (_, record) => (
-        <div className="flex justify-end gap-3">
-          <Edit2 
-            size={16} 
-            className="text-blue-500 cursor-pointer hover:text-blue-700" 
-            onClick={(e) => {
-              e.stopPropagation();
-              handleOpenDrawer(record);
-            }} 
-          />
-          <Trash2 
-            size={16} 
-            className="text-red-500 cursor-pointer hover:text-red-700" 
-            onClick={(e) => {
-              e.stopPropagation();
-              showAlert('confirm', 'Confirm Delete', 'Are you sure you want to delete this role?', () => handleDeleteRole(record.RoleId));
-            }}
-          />
-        </div>
-      ),
+      render: (_, record) => {
+        const isCoreRole = ['admin', 'user', 'guest'].includes((record.RoleName || '').toLowerCase());
+        if (isCoreRole) {
+          return null;
+        }
+        return (
+          <div className="flex justify-end gap-3">
+            <Edit2 
+              size={16} 
+              className="text-blue-500 cursor-pointer hover:text-blue-700" 
+              onClick={(e) => {
+                e.stopPropagation();
+                handleOpenDrawer(record);
+              }} 
+            />
+            <Trash2 
+              size={16} 
+              className="text-red-500 cursor-pointer hover:text-red-700" 
+              onClick={(e) => {
+                e.stopPropagation();
+                showAlert('confirm', 'Confirm Delete', 'Are you sure you want to delete this role?', () => handleDeleteRole(record.RoleId));
+              }}
+            />
+          </div>
+        );
+      },
     }
   ];
 
@@ -296,6 +295,7 @@ const UserRole = () => {
             rowKey="RoleId" 
             loading={loading}
             pagination={{ pageSize: 15 }}
+            selectable={false}
           />
         </div>
       </div>

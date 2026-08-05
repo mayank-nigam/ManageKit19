@@ -380,13 +380,13 @@ const RolePermissionMapping = () => {
   };
 
   const columns = [
-    { title: 'Role', dataIndex: 'RoleName', key: 'RoleName', width: '15%' },
-    { title: 'Scope', dataIndex: 'ScopeName', key: 'ScopeName', width: '15%' },
-    { title: 'Application', dataIndex: 'ModuleCode', key: 'Application', width: '15%', render: (code) => moduleAppMap[code] || 'Unknown' },
-    { title: 'Module Name', dataIndex: 'ModuleName', key: 'ModuleName', width: '15%' },
-    { title: 'Created By', dataIndex: 'Created_User', key: 'Created_User', width: '15%' },
-    { title: 'Created On', dataIndex: 'CreatedDate', key: 'CreatedDate', width: '15%', render: (date) => date ? dayjs(date).format('DD-MMM-YYYY') : '' },
-    { title: 'Status', dataIndex: 'stActive', key: 'stActive', width: '10%' },
+    { title: 'Role', dataIndex: 'RoleName', key: 'RoleName', width: '15%', sorter: (a, b) => (a.RoleName || '').localeCompare(b.RoleName || '') },
+    { title: 'Scope', dataIndex: 'ScopeName', key: 'ScopeName', width: '15%', sorter: (a, b) => (a.ScopeName || '').localeCompare(b.ScopeName || '') },
+    { title: 'Application', dataIndex: 'ModuleCode', key: 'Application', width: '15%', render: (code) => moduleAppMap[code] || 'Unknown', sorter: (a, b) => (moduleAppMap[a.ModuleCode] || '').localeCompare(moduleAppMap[b.ModuleCode] || '') },
+    { title: 'Module Name', dataIndex: 'ModuleName', key: 'ModuleName', width: '15%', sorter: (a, b) => (a.ModuleName || '').localeCompare(b.ModuleName || '') },
+    { title: 'Created By', dataIndex: 'Created_User', key: 'Created_User', width: '15%', sorter: (a, b) => (a.Created_User || '').localeCompare(b.Created_User || '') },
+    { title: 'Created On', dataIndex: 'CreatedDate', key: 'CreatedDate', width: '15%', sorter: (a, b) => new Date(a.CreatedDate || 0) - new Date(b.CreatedDate || 0), render: (date) => date ? dayjs(date).format('DD-MMM-YYYY') : '' },
+    { title: 'Status', dataIndex: 'stActive', key: 'stActive', width: '10%', sorter: (a, b) => (a.stActive || '').localeCompare(b.stActive || '') },
     {
       title: 'Actions',
       key: 'actions',
@@ -436,7 +436,7 @@ const RolePermissionMapping = () => {
       
       <div className="flex-1 p-4 overflow-hidden">
         <div className="h-full bg-white rounded-lg shadow-sm border border-[#e2e8f0] flex flex-col">
-          <PremiumTable columns={columns} dataSource={filteredMappings} rowKey="RolePermissionMappingId" loading={loading} pagination={{ pageSize: 15 }} />
+          <PremiumTable columns={columns} dataSource={filteredMappings} rowKey="RolePermissionMappingId" loading={loading} pagination={{ pageSize: 15 }} selectable={false} />
         </div>
       </div>
 

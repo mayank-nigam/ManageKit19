@@ -251,18 +251,21 @@ const UserRoleMapping = () => {
       dataIndex: 'RoleName',
       key: 'RoleName',
       width: '20%',
+      sorter: (a, b) => (a.RoleName || '').localeCompare(b.RoleName || ''),
     },
     {
       title: 'User(s) Count',
       dataIndex: 'UsersCount',
       key: 'UsersCount',
       width: '15%',
+      sorter: (a, b) => Number(a.UsersCount || 0) - Number(b.UsersCount || 0),
     },
     {
       title: 'User Names',
       dataIndex: 'UserNames',
       key: 'UserNames',
       width: '40%',
+      sorter: (a, b) => (a.UserNames || '').localeCompare(b.UserNames || ''),
       render: (text) => text || '-',
     },
     {
@@ -270,6 +273,7 @@ const UserRoleMapping = () => {
       dataIndex: 'CreatedUser',
       key: 'CreatedUser',
       width: '15%',
+      sorter: (a, b) => (a.CreatedUser || '').localeCompare(b.CreatedUser || ''),
     },
     {
       title: 'Actions',
@@ -327,6 +331,7 @@ const UserRoleMapping = () => {
             rowKey="RoleCode" 
             loading={loading}
             pagination={{ pageSize: 15 }}
+            selectable={false}
           />
         </div>
       </div>

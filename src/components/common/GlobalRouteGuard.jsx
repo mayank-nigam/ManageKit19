@@ -4,8 +4,6 @@ import { useNavigationContext } from '../../context/NavigationContext';
 import Loader from '../Loader/Loader';
 
 const globalWhiteList = [
-  '/', 
-  '/dashboard',
   '/login', 
   '/access-denied', 
   '/sso-callback', 

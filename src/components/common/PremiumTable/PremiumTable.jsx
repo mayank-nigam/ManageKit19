@@ -14,10 +14,32 @@ const PremiumTable = ({
 }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedRowKeys, setSelectedRowKeys] = useState([]);
+  const [sortConfig, setSortConfig] = useState({ key: null, direction: null });
   
+  const handleSort = (key, sorter) => {
+    if (!sorter) return;
+    let direction = 'asc';
+    if (sortConfig.key === key) {
+      if (sortConfig.direction === 'asc') direction = 'desc';
+      else if (sortConfig.direction === 'desc') direction = null;
+    }
+    setSortConfig({ key: direction ? key : null, direction });
+  };
+
+  const sortedData = React.useMemo(() => {
+    if (!sortConfig.key || !sortConfig.direction || !dataSource) return dataSource || [];
+    const column = columns.find(c => (c.key || c.dataIndex) === sortConfig.key);
+    if (!column || !column.sorter) return dataSource;
+    
+    return [...dataSource].sort((a, b) => {
+      const res = column.sorter(a, b);
+      return sortConfig.direction === 'asc' ? res : -res;
+    });
+  }, [dataSource, sortConfig, columns]);
+
   const pageSize = pagination?.pageSize || 10;
-  const totalPages = Math.ceil((dataSource?.length || 0) / pageSize);
-  const currentData = dataSource?.slice((currentPage - 1) * pageSize, currentPage * pageSize) || [];
+  const totalPages = Math.ceil((sortedData?.length || 0) / pageSize);
+  const currentData = sortedData?.slice((currentPage - 1) * pageSize, currentPage * pageSize) || [];
 
   const handleSelectAll = (e) => {
     if (e.target.checked) {
@@ -103,23 +125,25 @@ const PremiumTable = ({
               )}
               {columns.map((col, index) => (
                 <th 
-                  key={col.key || index} 
+                  key={col.key || col.dataIndex || index} 
                   style={{
                     padding: '12px 16px',
                     backgroundColor: '#ffffff',
                     borderBottom: '1px solid #e2e8f0',
                     width: col.width,
-                    textAlign: col.key === 'actions' ? 'right' : 'left'
+                    textAlign: col.key === 'actions' ? 'right' : 'left',
+                    cursor: col.sorter ? 'pointer' : 'default'
                   }}
+                  onClick={() => handleSort(col.key || col.dataIndex, col.sorter)}
                 >
                   <div className={`flex items-center gap-2 ${col.key === 'actions' ? 'justify-end' : ''}`}>
                     <div className='text-[13px] font-bold uppercase tracking-wider text-[#666666]'>
                       {col.title}
                     </div>
-                    {col.key !== 'actions' && (
+                    {col.sorter && (
                       <div className="flex items-center">
                         <Tooltip title="Sort" placement="top">
-                          <span className="flex items-center justify-center opacity-40 hover:opacity-100 hover:text-[#3b82f6] cursor-pointer transition-colors text-[#64748b]">
+                          <span className={`flex items-center justify-center transition-colors ${sortConfig.key === (col.key || col.dataIndex) ? 'text-blue-600 opacity-100' : 'text-[#64748b] opacity-40 hover:opacity-100 hover:text-blue-500'}`}>
                             <ArrowUpDown size={14} strokeWidth={2.5} />
                           </span>
                         </Tooltip>

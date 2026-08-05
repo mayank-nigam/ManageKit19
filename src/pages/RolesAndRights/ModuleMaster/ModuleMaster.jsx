@@ -18,6 +18,11 @@ const apiPost = async (endpoint, details, token) => {
 
 const { Option } = Select;
 
+const APPLICATION_OPTIONS = [
+  { value: 'KIT19', label: 'Management' },
+  { value: 'Sales', label: 'Sales' },
+];
+
 const ModuleMaster = () => {
   const { TokenId, userId } = getSession();
   const Token = TokenId || "-2295521862261168";
@@ -32,13 +37,17 @@ const ModuleMaster = () => {
   const [submitting, setSubmitting] = useState(false);
   const [form] = Form.useForm();
   const typeValue = Form.useWatch('Type', form);
+
+  // Application Code state — parent dependency (same pattern as RolePermissionMapping)
+  const [selectedApplicationCode, setSelectedApplicationCode] = useState(null);
   
   const initForm = {
     ModuleId: 0,
     ModuleName: '',
     ModuleDescription: '',
     Type: 'Module',
-    ParentModuleId: null, // use null for empty select
+    ApplicationCode: null,
+    ParentModuleId: null,
     URL: '#',
     Sequence: '',
     Title: '',
@@ -51,8 +60,18 @@ const ModuleMaster = () => {
 
   useEffect(() => {
     fetchModules();
-    fetchParentModules();
   }, []);
+
+  // When ApplicationCode changes, reload parent module dropdown and reset ParentModuleId
+  useEffect(() => {
+    if (selectedApplicationCode) {
+      fetchParentModules(selectedApplicationCode);
+    } else {
+      setParentModules([]);
+    }
+    // Reset parent module selection when application changes
+    form.setFieldsValue({ ParentModuleId: null });
+  }, [selectedApplicationCode]);
 
   const fetchModules = async () => {
     setLoading(true);
@@ -70,11 +89,22 @@ const ModuleMaster = () => {
     }
   };
 
-  const fetchParentModules = async () => {
+  // Accepts appCode to filter parent modules by application — same as RolePermissionMapping pattern
+  const fetchParentModules = async (appCode) => {
+    if (!appCode) {
+      setParentModules([]);
+      return;
+    }
     try {
-      const response = await apiPost(API_ENDPOINTS.MODULE_MASTER.GET_PARENT_MODULES, { Mode: 'SM' }, Token);
+      const response = await apiPost(
+        API_ENDPOINTS.MODULE_MASTER.GET_PARENT_MODULES,
+        { Mode: 'SM', ApplicationCode: appCode },
+        Token
+      );
       if (response?.Status === 1 && Array.isArray(response.Details)) {
         setParentModules(response.Details);
+      } else {
+        setParentModules([]);
       }
     } catch (error) {
       console.error("Error fetching parent modules:", error);
@@ -84,6 +114,8 @@ const ModuleMaster = () => {
   const openAddDrawer = () => {
     setDrawerMode('Add');
     setCurrentModuleId(0);
+    setSelectedApplicationCode(null);
+    setParentModules([]);
     form.setFieldsValue(initForm);
     setDrawerOpen(true);
   };
@@ -94,23 +126,27 @@ const ModuleMaster = () => {
     setDrawerOpen(true);
     
     try {
-      // Pass Mode for getting details by ID (commonly 'E' for Edit or 'S' for Select)
       const response = await apiPost(API_ENDPOINTS.MODULE_MASTER.GET_BY_ID, { ModuleId: record.ModuleId, Mode: 'E' }, Token);
       if (response?.Status === 1 && response.Details) {
         const d = Array.isArray(response.Details) ? response.Details[0] : response.Details;
         if (d) {
+          // Set ApplicationCode state first so useEffect fetches parent modules for this app
+          const appCode = d.ApplicationCode || null;
+          setSelectedApplicationCode(appCode);
+
           form.setFieldsValue({
-          ModuleName: d.ModuleName || '',
-          ModuleDescription: d.ModuleDescription || '',
-          Type: d.Type || 'Module',
-          ParentModuleId: d.ParentModuleId === 0 ? null : d.ParentModuleId,
-          URL: d.URL || '#',
-          Sequence: d.Sequence || '',
-          Title: d.Title || '',
-          Tag: d.Tag ? d.Tag.split(',').map(t => t.trim()).filter(Boolean) : [],
-          StaticPath: d.StaticPath || '',
-          IsInternal: d.IsInternal || false
-        });
+            ModuleName: d.ModuleName || '',
+            ModuleDescription: d.ModuleDescription || '',
+            Type: d.Type || 'Module',
+            ApplicationCode: appCode,
+            ParentModuleId: d.ParentModuleId === 0 ? null : d.ParentModuleId,
+            URL: d.URL || '#',
+            Sequence: d.Sequence || '',
+            Title: d.Title || '',
+            Tag: d.Tag ? d.Tag.split(',').map(t => t.trim()).filter(Boolean) : [],
+            StaticPath: d.StaticPath || '',
+            IsInternal: d.IsInternal || false
+          });
         }
       }
     } catch (error) {
@@ -140,6 +176,7 @@ const ModuleMaster = () => {
       Tag: Array.isArray(values.Tag) ? values.Tag.join(',') : (values.Tag || ''),
       ModuleId: currentModuleId,
       ParentModuleId: values.ParentModuleId || 0,
+      ApplicationCode: values.ApplicationCode || selectedApplicationCode || '',
       UserId: userId,
       Mode: drawerMode === 'Add' ? 'I' : 'U'
     };
@@ -152,7 +189,6 @@ const ModuleMaster = () => {
         Swal.fire('Success', `Module ${drawerMode === 'Add' ? 'created' : 'updated'} successfully.`, 'success');
         setDrawerOpen(false);
         fetchModules();
-        fetchParentModules();
       } else {
         Swal.fire('Error', response?.Message || 'Failed to save module.', 'error');
       }
@@ -176,6 +212,14 @@ const ModuleMaster = () => {
       dataIndex: 'ModuleDescription',
       key: 'ModuleDescription',
       width: 200
+    },
+    {
+      // NEW: Application column to show which app this module belongs to
+      title: 'Application',
+      dataIndex: 'ApplicationCode',
+      key: 'ApplicationCode',
+      width: 120,
+      render: (code) => APPLICATION_OPTIONS.find(a => a.value === code)?.label || code || '-'
     },
     {
       title: 'Website URL',
@@ -265,7 +309,7 @@ const ModuleMaster = () => {
           loading={loading}
           pagination={{ pageSize: 15 }}
           size="middle"
-          scroll={{ x: 1200 }}
+          scroll={{ x: 1400 }}
         />
       </div>
 
@@ -319,13 +363,38 @@ const ModuleMaster = () => {
                 </Radio.Group>
               </Form.Item>
             </Col>
+          </Row>
+
+          {/* Application Code — parent dependency (same pattern as RolePermissionMapping) */}
+          <Row gutter={24}>
             <Col span={12}>
+              <Form.Item
+                name="ApplicationCode"
+                label="Application"
+                rules={[{ required: true, message: 'Please select an Application' }]}
+              >
+                <Select
+                  placeholder="Select Application"
+                  allowClear
+                  onChange={(val) => {
+                    setSelectedApplicationCode(val || null);
+                  }}
+                >
+                  {APPLICATION_OPTIONS.map(app => (
+                    <Option key={app.value} value={app.value}>{app.label}</Option>
+                  ))}
+                </Select>
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              {/* Parent Module depends on Application selection */}
               <Form.Item name="ParentModuleId" label="Select Parent Module">
                 <Select 
                   showSearch
-                  placeholder="Select" 
+                  placeholder={selectedApplicationCode ? "Select Parent" : "Select Application first"}
                   allowClear
                   optionFilterProp="children"
+                  disabled={!selectedApplicationCode}
                 >
                   {parentModules.map(p => (
                     <Option key={p.ModuleId} value={p.ModuleId}>{p.ModuleName}</Option>
