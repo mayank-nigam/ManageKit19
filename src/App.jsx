@@ -17,8 +17,8 @@ import UserRoleMapping from './pages/RolesAndRights/UserRoleMapping/UserRoleMapp
 import RolePermissionMapping from './pages/RolesAndRights/RolePermissionMapping/RolePermissionMapping';
 import ModuleMaster from './pages/RolesAndRights/ModuleMaster/ModuleMaster';
 import FieldMasking from './pages/RolesAndRights/FieldMasking/FieldMasking';
-import CollaboratorTeam from './pages/RolesAndRights/CollaboratorTeam/CollaboratorTeam';
-import CollaboratorType from './pages/RolesAndRights/CollaboratorType/CollaboratorType';
+// import CollaboratorTeam from './pages/RolesAndRights/CollaboratorTeam/CollaboratorTeam';
+// import CollaboratorType from './pages/RolesAndRights/CollaboratorType/CollaboratorType';
 
 import './App.css';
 
@@ -53,8 +53,8 @@ function App() {
               <Route path="roles/user-role-mapping" element={<UserRoleMapping />} />
               <Route path="roles/field-masking" element={<FieldMasking />} />
               <Route path="roles/module-master" element={<ModuleMaster />} />
-              <Route path="master-settings/collaborator-team" element={<CollaboratorTeam />} />
-              <Route path="master-settings/collaborator-type" element={<CollaboratorType />} />
+              {/* <Route path="master-settings/collaborator-team" element={<CollaboratorTeam />} /> */}
+              {/* <Route path="master-settings/collaborator-type" element={<CollaboratorType />} /> */}
               {/* Add more admin routes here */}
             </Route>
           </Routes>

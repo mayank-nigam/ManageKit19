@@ -121,8 +121,8 @@ const MENU_MAPPING = {
   'User Role Mapping': { name: 'User Role Mapping', href: '/roles/user-role-mapping', icon: FiLink },
   'Role Permission Mapping': { name: 'Role Permission Mapping', href: '/roles/role-permission-mapping', icon: FiShield },
   'Field Masking': { name: 'Field Masking', href: '/roles/field-masking', icon: FiLayout },
-  'Collaborator Team': { name: 'Collaborator Team', href: '/master-settings/collaborator-team', icon: FiUsers },
-  'CollaboratorType': { name: 'CollaboratorType', href: '/master-settings/collaborator-type', icon: FiUsers },
+  // 'Collaborator Team': { name: 'Collaborator Team', href: '/master-settings/collaborator-team', icon: FiUsers },
+  // 'CollaboratorType': { name: 'CollaboratorType', href: '/master-settings/collaborator-type', icon: FiUsers },
   'User Hierarchy': { name: 'User Hierarchy', href: '/master-settings/user-hierarchy', icon: FiUsers }
 };
 
@@ -166,8 +166,8 @@ export const NavigationProvider = ({ children }) => {
             { name: 'Role Permission Mapping', href: '/roles/role-permission-mapping', icon: FiLayout },
             { name: 'Field Masking', href: '/roles/field-masking', icon: FiLayout },
             ...(getSession().userId === 335 ? [{ name: 'Module Master', href: '/roles/module-master', icon: FiLayout }] : []),
-            { name: 'Collaborator Team', href: '/master-settings/collaborator-team', icon: FiUsers },
-            { name: 'Collaborator Type', href: '/master-settings/collaborator-type', icon: FiUsers }
+            // { name: 'Collaborator Team', href: '/master-settings/collaborator-team', icon: FiUsers },
+            // { name: 'Collaborator Type', href: '/master-settings/collaborator-type', icon: FiUsers }
           ]
         },
         // {

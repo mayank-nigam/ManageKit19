@@ -6,7 +6,7 @@ import {
 } from 'antd';
 import {
   Plus, Search, Edit2, Trash2, Shield, Smartphone, Monitor,
-  Eye, EyeOff, Lock, AlertCircle
+  Eye, EyeOff, Lock, AlertCircle, Hash, FileText, Users, List, Settings
 } from 'lucide-react';
 import Swal from 'sweetalert2';
 import { getSession } from '../../../getSession';
@@ -390,23 +390,27 @@ const FieldMasking = () => {
   // ---- Main table columns -------------------------------------------
   const mainColumns = [
     {
-      title: '#',
+      title: <div className="flex items-center gap-2" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Hash size={16} className="text-gray-500" /> #</div>,
       width: 50,
+      sorter: (a, b) => (a.PageHiddenFieldsId || 0) - (b.PageHiddenFieldsId || 0),
       render: (_, __, idx) => <span style={{ color: '#888', fontSize: 13 }}>{(currentPage - 1) * 15 + idx + 1}</span>,
     },
     {
-      title: 'Page',
+      title: <div className="flex items-center gap-2" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><FileText size={16} className="text-gray-500" /> Page</div>,
       dataIndex: 'TableName',
+      sorter: (a, b) => (a.TableName || '').localeCompare(b.TableName || ''),
       render: (v) => <span style={{ fontWeight: 600 }}>{v}</span>,
     },
     {
-      title: 'Role',
+      title: <div className="flex items-center gap-2" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Users size={16} className="text-gray-500" /> Role</div>,
       dataIndex: 'RoleName',
+      sorter: (a, b) => (a.RoleName || '').localeCompare(b.RoleName || ''),
       render: (v) => <Tag color="blue">{v || '—'}</Tag>,
     },
     {
-      title: 'Field List',
+      title: <div className="flex items-center gap-2" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><List size={16} className="text-gray-500" /> Field List</div>,
       dataIndex: 'FieldNames',
+      sorter: (a, b) => (a.FieldNames || '').localeCompare(b.FieldNames || ''),
       render: (v) => {
         if (!v) return <span style={{ color: '#bbb' }}>—</span>;
         const fields = v.split(',').map(f => f.trim()).filter(Boolean);
@@ -425,7 +429,7 @@ const FieldMasking = () => {
       },
     },
     {
-      title: 'Actions',
+      title: <div className="flex items-center gap-2" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Settings size={16} className="text-gray-500" /> Actions</div>,
       width: 110,
       render: (_, row) => (
         <Space>
@@ -614,9 +618,9 @@ const FieldMasking = () => {
           size="middle"
           locale={{
             emptyText: (
-              <div style={{ padding: '40px 0', textAlign: 'center', color: '#aaa' }}>
-                <AlertCircle size={40} style={{ marginBottom: 8 }} />
-                <div>No field masking configurations found.</div>
+              <div style={{ padding: '40px 0', textAlign: 'center' }}>
+                <img src="/nodata.gif" alt="No Data Available" style={{ maxWidth: '250px', margin: '0 auto 10px auto', display: 'block' }} />
+                <div style={{ color: '#666', fontWeight: 500 }}>No record Found.</div>
                 <div style={{ marginTop: 8 }}>
                   <Button type="link" onClick={openAddDrawer}>Click here to add one</Button>
                 </div>

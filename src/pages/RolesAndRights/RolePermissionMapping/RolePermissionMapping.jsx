@@ -521,8 +521,13 @@ const RolePermissionMapping = () => {
                     <tbody className="bg-white">
                       {permissions.length === 0 ? (
                         <tr>
-                          <td colSpan={PERMISSION_COLUMNS.length + 1} className="text-center text-gray-400 py-8">
-                            No permissions available or select options first.
+                          <td colSpan={PERMISSION_COLUMNS.length + 1} className="text-center py-8">
+                            <div>
+                              <img src="/nodata.gif" alt="No Data Available" style={{ maxWidth: '250px', margin: '0 auto 10px auto', display: 'block' }} />
+                              <div style={{ color: '#666', fontWeight: 500, fontSize: '15px' }}>
+                                No permissions available or select options first.
+                              </div>
+                            </div>
                           </td>
                         </tr>
                       ) : (

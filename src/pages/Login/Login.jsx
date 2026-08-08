@@ -75,7 +75,7 @@ const Login = () => {
         
         message.success('Login successful!');
         setTimeout(() => {
-          navigate('/dashboard');
+          navigate('/');
         }, 500);
 
       } else {

@@ -20,7 +20,6 @@ const UserRole = () => {
   // Form State
   const [editingRoleId, setEditingRoleId] = useState(null);
   const [roleName, setRoleName] = useState('');
-  const [peerView, setPeerView] = useState(false);
   const [isActive, setIsActive] = useState(true);
 
   // Alert State
@@ -82,7 +81,6 @@ const UserRole = () => {
   const resetForm = () => {
     setEditingRoleId(null);
     setRoleName('');
-    setPeerView(false);
     setIsActive(true);
   };
 
@@ -90,7 +88,6 @@ const UserRole = () => {
     if (role) {
       setEditingRoleId(role.RoleId);
       setRoleName(role.RoleName);
-      setPeerView(role.PeerView || false);
       setIsActive(role.Active || false);
     } else {
       resetForm();
@@ -119,8 +116,7 @@ const UserRole = () => {
         RoleName: roleName.trim(),
         RoleCode: "", 
         Active: isActive,
-        UserId: USER_ID,
-        bViewPeer: peerView
+        UserId: USER_ID
       };
 
       if (isEdit) {
@@ -177,7 +173,9 @@ const UserRole = () => {
   const handleToggleStatus = async (roleId, newStatus) => {
     try {
       const role = roles.find(r => r.RoleId === roleId);
-      const response = await fetchApi(`${NEWV3_BASE_URL}UserAuth/UpdateRoleMasterStatus`, {
+      if (!role) return;
+
+      const response = await fetchApi(`${NEWV3_BASE_URL}UserAuth/UpdateRoleMaster`, {
         Token: API_TOKEN,
         LoggedUserId: USER_ID,
         Message: "",
@@ -186,8 +184,10 @@ const UserRole = () => {
         Details: { 
           Mode: "U", 
           RoleId: roleId, 
-          Status: newStatus, 
-          UserId: USER_ID 
+          RoleName: role.RoleName,
+          RoleCode: role.RoleCode || "",
+          Active: newStatus, 
+          UserId: USER_ID
         }
       });
 
@@ -221,7 +221,11 @@ const UserRole = () => {
       key: 'CreatedDate',
       width: '20%',
       sorter: (a, b) => new Date(a.CreatedDate || 0) - new Date(b.CreatedDate || 0),
-      render: (date) => date ? dayjs(date).format('DD-MMM-YYYY hh:mm A') : '',
+      render: (date, record) => {
+        const isCoreRole = ['admin', 'user', 'guest'].includes((record.RoleName || '').toLowerCase());
+        if (isCoreRole) return '';
+        return date ? dayjs(date).format('DD-MMM-YYYY hh:mm A') : '';
+      },
     },
     {
       title: 'Status',
@@ -325,12 +329,6 @@ const UserRole = () => {
           <div className="space-y-1">
             <label className="text-sm font-medium text-gray-700 block mb-2">Options</label>
             <div className="flex flex-col gap-3">
-              <Checkbox 
-                checked={peerView}
-                onChange={(e) => setPeerView(e.target.checked)}
-              >
-                Enable Peer View
-              </Checkbox>
               <Checkbox 
                 checked={isActive}
                 onChange={(e) => setIsActive(e.target.checked)}

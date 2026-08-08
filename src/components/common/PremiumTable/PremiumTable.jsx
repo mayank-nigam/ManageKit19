@@ -201,9 +201,12 @@ const PremiumTable = ({
                 })
               ) : (
                 <tr>
-                  <td colSpan={columns.length + (selectable ? 1 : 0)} style={{ textAlign: 'center', padding: '40px' }}>
-                    <div style={{ color: '#444', fontSize: '15px', fontWeight: 600 }}>
-                      No record Found.
+                  <td colSpan={columns.length + (selectable ? 1 : 0)} style={{ textAlign: 'center', padding: '40px 0' }}>
+                    <div>
+                      <img src="/nodata.gif" alt="No Data Available" style={{ maxWidth: '250px', margin: '0 auto 10px auto', display: 'block' }} />
+                      <div style={{ color: '#666', fontWeight: 500, fontSize: '15px' }}>
+                        No record Found.
+                      </div>
                     </div>
                   </td>
                 </tr>

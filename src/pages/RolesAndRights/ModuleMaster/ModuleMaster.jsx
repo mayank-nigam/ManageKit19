@@ -4,6 +4,7 @@ import { Edit2, Trash2, Plus } from 'lucide-react';
 import Swal from 'sweetalert2';
 import { getSession } from '../../../getSession';
 import API_ENDPOINTS from '../../../config/apiEndpoints';
+import PremiumTable from '../../../components/common/PremiumTable/PremiumTable';
 
 const BASE_URL = (process.env.REACT_APP_SERVICES_API_BASE_URL || '').replace(/\/$/, '');
 
@@ -205,12 +206,14 @@ const ModuleMaster = () => {
       title: 'Module Name',
       dataIndex: 'ModuleName',
       key: 'ModuleName',
+      sorter: (a, b) => (a.ModuleName || '').localeCompare(b.ModuleName || ''),
       width: 150
     },
     {
       title: 'Description',
       dataIndex: 'ModuleDescription',
       key: 'ModuleDescription',
+      sorter: (a, b) => (a.ModuleDescription || '').localeCompare(b.ModuleDescription || ''),
       width: 200
     },
     {
@@ -218,6 +221,11 @@ const ModuleMaster = () => {
       title: 'Application',
       dataIndex: 'ApplicationCode',
       key: 'ApplicationCode',
+      sorter: (a, b) => {
+        const aLabel = APPLICATION_OPTIONS.find(opt => opt.value === a.ApplicationCode)?.label || a.ApplicationCode || '';
+        const bLabel = APPLICATION_OPTIONS.find(opt => opt.value === b.ApplicationCode)?.label || b.ApplicationCode || '';
+        return aLabel.localeCompare(bLabel);
+      },
       width: 120,
       render: (code) => APPLICATION_OPTIONS.find(a => a.value === code)?.label || code || '-'
     },
@@ -225,24 +233,28 @@ const ModuleMaster = () => {
       title: 'Website URL',
       dataIndex: 'URL',
       key: 'URL',
+      sorter: (a, b) => (a.URL || '').localeCompare(b.URL || ''),
       width: 150
     },
     {
       title: 'Parent Module',
       dataIndex: 'ModuleParentName',
       key: 'ModuleParentName',
+      sorter: (a, b) => (a.ModuleParentName || '').localeCompare(b.ModuleParentName || ''),
       width: 150
     },
     {
       title: 'Mobile Path',
       dataIndex: 'StaticPath',
       key: 'StaticPath',
+      sorter: (a, b) => (a.StaticPath || '').localeCompare(b.StaticPath || ''),
       width: 150
     },
     {
       title: 'Sequence',
       dataIndex: 'Sequence',
       key: 'Sequence',
+      sorter: (a, b) => (a.Sequence || 0) - (b.Sequence || 0),
       width: 80
     },
     {
@@ -260,6 +272,7 @@ const ModuleMaster = () => {
       title: 'Status',
       dataIndex: 'stActive',
       key: 'stActive',
+      sorter: (a, b) => (a.stActive || '').localeCompare(b.stActive || ''),
       width: 80,
       render: (text) => (
         <span style={{ color: text?.toLowerCase() === 'active' ? 'green' : 'red' }}>
@@ -275,9 +288,9 @@ const ModuleMaster = () => {
         <div style={{ display: 'flex', gap: 10 }}>
           <Edit2 
             size={16} 
-            color="#555" 
-            style={{ cursor: 'pointer' }} 
+            className="text-blue-500 cursor-pointer hover:text-blue-700" 
             onClick={() => openEditDrawer(record)} 
+            title="Edit"
           />
           <Popconfirm
             title="Delete this module?"
@@ -285,7 +298,11 @@ const ModuleMaster = () => {
             okText="Yes"
             cancelText="No"
           >
-            <Trash2 size={16} color="red" style={{ cursor: 'pointer' }} />
+            <Trash2 
+              size={16} 
+              className="text-red-500 cursor-pointer hover:text-red-700" 
+              title="Delete"
+            />
           </Popconfirm>
         </div>
       )
@@ -302,14 +319,13 @@ const ModuleMaster = () => {
       </div>
       
       <div style={{ background: '#fff', borderRadius: 8, padding: 20, boxShadow: '0 2px 8px rgba(0,0,0,0.05)', overflowX: 'auto' }}>
-        <Table
+        <PremiumTable
           columns={columns}
           dataSource={modules}
           rowKey="ModuleId"
           loading={loading}
           pagination={{ pageSize: 15 }}
-          size="middle"
-          scroll={{ x: 1400 }}
+          selectable={false}
         />
       </div>
 
