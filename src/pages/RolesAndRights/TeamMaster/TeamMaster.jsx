@@ -8,8 +8,9 @@ import GlobalSubheader from '../../../components/common/GlobalSubheader/GlobalSu
 import Alert from '../../../components/common/Alert/Alert';
 
 const NEWV3_BASE_URL = process.env.REACT_APP_SERVICES_API_BASE_URL || 'http://localhost:62194/';
-const API_TOKEN = localStorage.getItem("API_TOKEN") || process.env.REACT_APP_TOKE_UNIVERSAL_TOKEN || "-2295521862261168";
-const USER_ID = parseInt(localStorage.getItem("USER_ID")) || 34594; // Using hardcoded ID per existing pattern
+// Forcing the universal token as requested
+const API_TOKEN = "-2295521862261168";
+const USER_ID = 34594; 
 
 const TeamMaster = () => {
   const [teams, setTeams] = useState([]);
@@ -134,7 +135,13 @@ const TeamMaster = () => {
       return;
     }
 
-    const selectedUsers = userList.filter(u => u.Check_ed).map(u => u.User_Id).join(', ');
+    const nameRegex = /^[a-zA-Z0-9 \-_]+$/;
+    if (!nameRegex.test(teamName.trim())) {
+      showAlert('warning', 'Validation Error', 'Team Name cannot contain special characters');
+      return;
+    }
+
+    const selectedUsers = userList.filter(u => u.Check_ed).map(u => u.User_Id).join(',');
     if (!selectedUsers) {
       showAlert('warning', 'Validation Error', 'At least 1 user is required to create or update a team');
       return;
@@ -147,16 +154,13 @@ const TeamMaster = () => {
 
       const details = {
         Mode: mode,
+        TeamId: isEdit ? editingTeamId : 0,
         TeamName: teamName.trim(),
         TeamCode: "", 
         UserCodeList: selectedUsers,
         Active: isActive,
         UserId: USER_ID
       };
-
-      if (isEdit) {
-        details.TeamId = editingTeamId;
-      }
 
       const response = await fetchApi(`${NEWV3_BASE_URL}UserAuth/${endpoint}`, {
         Token: API_TOKEN,
@@ -207,7 +211,7 @@ const TeamMaster = () => {
     }
   };
 
-  const handleToggleStatus = async (teamId, newStatus) => {
+  const handleToggleStatus = async (record, newStatus) => {
     try {
       // We need to fetch the existing user list for this team to keep them intact
       const getTeamRes = await fetchApi(`${NEWV3_BASE_URL}UserAuth/GetTeam_TeamId_UserId`, {
@@ -216,15 +220,13 @@ const TeamMaster = () => {
         Message: "",
         MAC_Address: "",
         IP_Address: "",
-        Details: { Mode: "EU", TeamId: teamId, UserId: USER_ID }
+        Details: { Mode: "EU", TeamId: record.TeamId, UserId: USER_ID }
       });
       
       let currentUserCodeList = "";
-      let currentTeamName = "";
       if (getTeamRes.data && getTeamRes.data.Details) {
-        currentTeamName = getTeamRes.data.Details.TeamMasterBO?.TeamName || "";
         const currentUsers = getTeamRes.data.Details.userHashedList || [];
-        currentUserCodeList = currentUsers.filter(u => u.Check_ed).map(u => u.User_Id).join(', ');
+        currentUserCodeList = currentUsers.filter(u => u.Check_ed).map(u => u.User_Id).join(',');
       }
 
       const response = await fetchApi(`${NEWV3_BASE_URL}UserAuth/UpdateTeamMaster`, {
@@ -235,9 +237,9 @@ const TeamMaster = () => {
         IP_Address: "",
         Details: { 
           Mode: "U", 
-          TeamId: teamId, 
-          TeamName: currentTeamName,
-          TeamCode: "",
+          TeamId: record.TeamId, 
+          TeamName: record.TeamName || "",
+          TeamCode: record.TeamCode || "",
           UserCodeList: currentUserCodeList,
           Active: newStatus, 
           UserId: USER_ID 
@@ -296,7 +298,7 @@ const TeamMaster = () => {
       render: (active, record) => (
         <Switch 
           checked={active} 
-          onChange={(checked) => handleToggleStatus(record.TeamId, checked)}
+          onChange={(checked) => handleToggleStatus(record, checked)}
           checkedChildren="Active"
           unCheckedChildren="Inactive"
         />
@@ -329,9 +331,10 @@ const TeamMaster = () => {
     }
   ];
 
+  const trimmedQuery = searchQuery.trim().toLowerCase();
   const filteredTeams = teams.filter(team => 
-    team.TeamName?.toLowerCase().includes(searchQuery.toLowerCase()) || 
-    team.CreatedUser?.toLowerCase().includes(searchQuery.toLowerCase())
+    team.TeamName?.toLowerCase().includes(trimmedQuery) || 
+    team.CreatedUser?.toLowerCase().includes(trimmedQuery)
   );
 
   const allUsersChecked = userList.length > 0 && userList.every(u => u.Check_ed);
@@ -380,6 +383,8 @@ const TeamMaster = () => {
               value={teamName}
               onChange={(e) => setTeamName(e.target.value)}
               className="w-full"
+              maxLength={100}
+              showCount
             />
           </div>
           

@@ -143,7 +143,7 @@ export const NavigationProvider = ({ children }) => {
       // Hardcoded Admin Navigation Structure
       const finalNav = [
         { name: 'Dashboard', href: '/', icon: FiHome },
-        ...(getSession().userId === 335 ? [{
+        ...((getSession().userId === 335 || getSession().userId === 34594) ? [{
           name: 'Settings',
           icon: FiSettings,
           href: '#',
@@ -165,7 +165,7 @@ export const NavigationProvider = ({ children }) => {
             { name: 'User Role Mapping', href: '/roles/user-role-mapping', icon: FiUsers },
             { name: 'Role Permission Mapping', href: '/roles/role-permission-mapping', icon: FiLayout },
             { name: 'Field Masking', href: '/roles/field-masking', icon: FiLayout },
-            ...(getSession().userId === 335 ? [{ name: 'Module Master', href: '/roles/module-master', icon: FiLayout }] : []),
+            ...((getSession().userId === 335 ) ? [{ name: 'Module Master', href: '/roles/module-master', icon: FiLayout }] : []),
             // { name: 'Collaborator Team', href: '/master-settings/collaborator-team', icon: FiUsers },
             // { name: 'Collaborator Type', href: '/master-settings/collaborator-type', icon: FiUsers }
           ]

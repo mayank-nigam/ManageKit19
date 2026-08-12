@@ -11,8 +11,7 @@ import './UpdateModule.css';
 const NEWV3_BASE_URL = process.env.REACT_APP_SERVICES_API_BASE_URL || 'http://localhost:62194/';
 const UPDATE_API_URL = `${NEWV3_BASE_URL}${API_ENDPOINTS.BANNER.banner}`;
 const AZURE_BASE_URL = process.env.REACT_APP_SERVICES_AZURE_BASEURL || 'https://serviceskit19.azurewebsites.net/';
-const USERS_API_URL = `${AZURE_BASE_URL}${API_ENDPOINTS.TICKET_SUPPORT.BIND_USERS}`;
-const USER_SEGMENT_API_URL = `${AZURE_BASE_URL}${API_ENDPOINTS.BANNER.GET_USER_SEGMENTS}`;
+const USERS_API_URL = `${NEWV3_BASE_URL}Common/CommonActionModebased`;
 const API_TOKEN = "-2295521862261168";
 const USER_ID = 34594;
 
@@ -56,8 +55,6 @@ const UpdateModule = () => {
   const [moduleCode, setModuleCode] = useState('');
   const [users, setUsers] = useState([]);
   const [userOptions, setUserOptions] = useState([]);
-  const [userSegments, setUserSegments] = useState([]);
-  const [segmentOptions, setSegmentOptions] = useState([]);
   const [startDate, setStartDate] = useState(dayjs());
   const [endDate, setEndDate] = useState(dayjs().add(7, 'day'));
 
@@ -69,7 +66,7 @@ const UpdateModule = () => {
     try {
       const payload = {
         Token: API_TOKEN,
-        Details: JSON.stringify({ UserId: USER_ID })
+        Details: JSON.stringify({ Mode: "UserList", UserId: USER_ID })
       };
 
       const response = await fetch(USERS_API_URL, {
@@ -103,31 +100,6 @@ const UpdateModule = () => {
       }
     } catch (error) {
       console.error("Error fetching users:", error);
-    }
-  };
-
-  const fetchUserSegments = async () => {
-    try {
-      const payload = {
-        Token: API_TOKEN,
-        LoggedUserId: USER_ID
-      };
-
-      const response = await fetch(USER_SEGMENT_API_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        const details = data.Details || [];
-        setSegmentOptions(Array.isArray(details) ? details : []);
-      } else {
-        console.error("User Segments API returned status:", response.status);
-      }
-    } catch (error) {
-      console.error("Error fetching user segments:", error);
     }
   };
 
@@ -181,7 +153,6 @@ const UpdateModule = () => {
       setApplicationCode(update.ApplicationCode || '');
       setModuleCode(update.ModuleCode || '');
       setUsers(update.Users ? update.Users.split(',').filter(Boolean).map(u => Number(u)) : []);
-      setUserSegments(update.UserSegments ? update.UserSegments.split(',').filter(Boolean).map(u => Number(u)) : []);
       setStartDate(update.StartDate ? dayjs(update.StartDate) : dayjs());
       setEndDate(update.EndDate ? dayjs(update.EndDate) : dayjs().add(7, 'day'));
     } else {
@@ -192,13 +163,11 @@ const UpdateModule = () => {
       setApplicationCode('SALES');
       setModuleCode(selectedModuleFilter); // Default to the currently filtered page when adding
       setUsers([]);
-      setUserSegments([]);
       setStartDate(dayjs());
       setEndDate(dayjs().add(7, 'day'));
     }
     setIsDrawerOpen(true);
     fetchUserOptions();
-    fetchUserSegments();
   };
 
   const handleSave = async () => {
@@ -209,40 +178,6 @@ const UpdateModule = () => {
 
     try {
       let finalUsers = Array.isArray(users) ? [...users] : [];
-      if (Array.isArray(userSegments) && userSegments.length > 0) {
-        for (const segmentId of userSegments) {
-          try {
-            const segPayload = {
-              Token: API_TOKEN,
-              Details: JSON.stringify({
-                UserType: 0,
-                searchText: "",
-                Userid: USER_ID,
-                SegmentId: segmentId,
-                Offset: 0,
-                PageSize: 1000000,
-                Draw: 1
-              })
-            };
-            const segRes = await fetch(`${AZURE_BASE_URL}/Partner/LoadPartnerUsersDetail`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify(segPayload)
-            });
-            const segData = await segRes.json();
-            if (segData && segData.data && Array.isArray(segData.data)) {
-              segData.data.forEach(user => {
-                const id = user.UserId || user.User_ID || user.Id || user.ID || user.userid;
-                if (id && !finalUsers.includes(Number(id))) {
-                  finalUsers.push(Number(id));
-                }
-              });
-            }
-          } catch (segErr) {
-            console.error('Failed to load users for segment:', segmentId, segErr);
-          }
-        }
-      }
 
       const payload = {
         Token: API_TOKEN,
@@ -257,8 +192,7 @@ const UpdateModule = () => {
           EndDate: endDate ? endDate.format('YYYY-MM-DD') : "",
           ApplicationCode: applicationCode || "SALES",
           ModuleCode: moduleCode || "",
-          Users: finalUsers.join(','),
-          UserSegments: Array.isArray(userSegments) ? userSegments.join(',') : ""
+          Users: finalUsers.join(',')
         })
       };
 
@@ -505,7 +439,10 @@ const UpdateModule = () => {
                 dropdownStyle={{ zIndex: 10000 }}
                 placeholder="Select App Code" 
                 value={applicationCode} 
-                onChange={(value) => setApplicationCode(value)} 
+                onChange={(value) => {
+                  setApplicationCode(value);
+                  setModuleCode('');
+                }} 
               >
                 <Option value="SALES">SALES</Option>
                 <Option value="AI">AI</Option>
@@ -521,8 +458,9 @@ const UpdateModule = () => {
                 dropdownStyle={{ zIndex: 10000 }}
                 placeholder="Select Module Code" 
                 value={moduleCode} 
-                onChange={(value) => setModuleCode(value)}
+                onChange={(value) => setModuleCode(value || '')}
                 showSearch
+                allowClear
                 optionFilterProp="children"
                 disabled={!!editingId}
               >
@@ -537,11 +475,13 @@ const UpdateModule = () => {
           </div>
 
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-1">Target Users</label>
+            <label className="block text-sm font-semibold text-gray-700 mb-1">
+              Target Users <span className="font-normal text-xs text-gray-400 ml-2">(Leave empty to target everyone)</span>
+            </label>
             <Select
               mode="multiple"
               size="large"
-              placeholder="Select target users"
+              placeholder="Select specific users or leave empty for ALL"
               style={{ width: '100%' }}
               dropdownStyle={{ zIndex: 10000 }}
               value={users}
@@ -551,28 +491,7 @@ const UpdateModule = () => {
             >
               {userOptions.map(user => (
                 <Option key={user.User_ID} value={user.User_ID}>
-                  {user.Name}
-                </Option>
-              ))}
-            </Select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-1">Target Segments</label>
-            <Select
-              mode="multiple"
-              size="large"
-              placeholder="Select target user segments"
-              style={{ width: '100%' }}
-              dropdownStyle={{ zIndex: 10000 }}
-              value={userSegments}
-              onChange={(values) => setUserSegments(values)}
-              optionFilterProp="children"
-              showSearch
-            >
-              {segmentOptions.map(seg => (
-                <Option key={seg.Id} value={seg.Id}>
-                  {seg.SegmentName}
+                  {user.User_ID} - {user.Name}
                 </Option>
               ))}
             </Select>

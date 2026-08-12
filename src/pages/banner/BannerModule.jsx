@@ -11,8 +11,8 @@ import './BannerModule.css';
 const NEWV3_BASE_URL = process.env.REACT_APP_SERVICES_API_BASE_URL || 'http://localhost:62194/';
 const AZURE_BASE_URL = process.env.REACT_APP_SERVICES_AZURE_BASEURL || 'https://serviceskit19.azurewebsites.net/';
 const BANNER_API_URL = `${NEWV3_BASE_URL}${API_ENDPOINTS.BANNER.banner}`;
-const USERS_API_URL = `${AZURE_BASE_URL}${API_ENDPOINTS.TICKET_SUPPORT.BIND_USERS}`;
-const USER_SEGMENT_API_URL = `${AZURE_BASE_URL}${API_ENDPOINTS.BANNER.GET_USER_SEGMENTS}`;
+const USERS_API_URL = `${NEWV3_BASE_URL}Common/CommonActionModebased`;
+const MODULES_API_URL = `${NEWV3_BASE_URL}UserAuth/GetModuleMasterListModule`;
 const API_TOKEN = "-2295521862261168";
 const USER_ID = 34594;
 
@@ -25,6 +25,8 @@ const BannerModule = () => {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [currentFilter, setCurrentFilter] = useState('all');
+  const [listAppCode, setListAppCode] = useState('sales');
+  const [listModCode, setListModCode] = useState('');
 
   // Form states
   const [bannerTitle, setBannerTitle] = useState('');
@@ -35,18 +37,26 @@ const BannerModule = () => {
   const [moduleCode, setModuleCode] = useState('');
   const [users, setUsers] = useState([]);
   const [userOptions, setUserOptions] = useState([]);
-  const [userSegments, setUserSegments] = useState([]);
-  const [segmentOptions, setSegmentOptions] = useState([]);
+  const [moduleOptions, setModuleOptions] = useState([]);
+  const [formModuleOptions, setFormModuleOptions] = useState([]);
 
   useEffect(() => {
     fetchBanners();
-  }, []);
+  }, [listAppCode, listModCode]);
+
+  useEffect(() => {
+    fetchModuleOptions(listAppCode).then(res => setModuleOptions(res || []));
+  }, [listAppCode]);
+
+  useEffect(() => {
+    fetchModuleOptions(applicationCode).then(res => setFormModuleOptions(res || []));
+  }, [applicationCode]);
 
   const fetchUserOptions = async () => {
     try {
       const payload = {
         Token: API_TOKEN,
-        Details: JSON.stringify({ UserId: USER_ID })
+        Details: JSON.stringify({ Mode: "UserList", UserId: USER_ID })
       };
 
       const response = await fetch(USERS_API_URL, {
@@ -98,29 +108,39 @@ const BannerModule = () => {
     }
   };
 
-  const fetchUserSegments = async () => {
+  const fetchModuleOptions = async (appCode) => {
     try {
       const payload = {
         Token: API_TOKEN,
-        LoggedUserId: USER_ID
+        Details: JSON.stringify({ Mode: "SM", ApplicationCode: appCode || null })
       };
-
-      const response = await fetch(USER_SEGMENT_API_URL, {
+      const response = await fetch(MODULES_API_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       });
-
       if (response.ok) {
-        const data = await response.json();
-        const details = data.Details || [];
-        setSegmentOptions(Array.isArray(details) ? details : []);
-      } else {
-        console.error("User Segments API returned status:", response.status);
+        const rawText = await response.text();
+        let data;
+        try { data = JSON.parse(rawText); } catch(e) { return; }
+        let parsed = typeof data === 'string' ? JSON.parse(data) : data;
+        let details = parsed.Details;
+        if (typeof details === 'string') {
+          try { details = JSON.parse(details); } catch(e) {}
+        }
+        let modulesArr = [];
+        if (Array.isArray(parsed)) modulesArr = parsed;
+        else if (Array.isArray(details)) modulesArr = details;
+        else if (details && Array.isArray(details.data)) modulesArr = details.data;
+        else if (details && Array.isArray(details.Data)) modulesArr = details.Data;
+        else if (details && Array.isArray(details.Table)) modulesArr = details.Table;
+        
+        return modulesArr;
       }
-    } catch (error) {
-      console.error("Error fetching user segments:", error);
+    } catch (err) {
+      console.error("Error fetching modules:", err);
     }
+    return [];
   };
 
   const fetchBanners = async () => {
@@ -131,8 +151,8 @@ const BannerModule = () => {
         Details: JSON.stringify({
           Mode: "GetBanner",
           UserId: USER_ID,
-          ApplicationCode: "sales",
-          ModuleCode: ""
+          ApplicationCode: listAppCode,
+          ModuleCode: listModCode
         })
       };
 
@@ -180,7 +200,6 @@ const BannerModule = () => {
       setApplicationCode(banner.ApplicationCode || '');
       setModuleCode(banner.ModuleCode || '');
       setUsers(banner.Users ? banner.Users.split(',').filter(Boolean).map(u => Number(u)) : []);
-      setUserSegments(banner.UserSegments ? banner.UserSegments.split(',').filter(Boolean).map(u => Number(u)) : []);
     } else {
       setEditingId(null);
       setBannerTitle('');
@@ -190,11 +209,10 @@ const BannerModule = () => {
       setApplicationCode('');
       setModuleCode('');
       setUsers([]);
-      setUserSegments([]);
     }
     setIsDrawerOpen(true);
     fetchUserOptions();
-    fetchUserSegments();
+    fetchModuleOptions();
   };
 
   const handleClone = (banner) => {
@@ -206,10 +224,9 @@ const BannerModule = () => {
     setApplicationCode(banner.ApplicationCode || '');
     setModuleCode(banner.ModuleCode || '');
     setUsers(banner.Users ? banner.Users.split(',').filter(Boolean).map(u => Number(u)) : []);
-    setUserSegments(banner.UserSegments ? banner.UserSegments.split(',').filter(Boolean).map(u => Number(u)) : []);
     setIsDrawerOpen(true);
     fetchUserOptions();
-    fetchUserSegments();
+    fetchModuleOptions();
   };
 
   const handleSave = async () => {
@@ -220,41 +237,6 @@ const BannerModule = () => {
 
     try {
       let finalUsers = Array.isArray(users) ? [...users] : [];
-      if (Array.isArray(userSegments) && userSegments.length > 0) {
-        for (const segmentId of userSegments) {
-          try {
-            const segPayload = {
-              Token: API_TOKEN,
-              Details: JSON.stringify({
-                UserType: 0,
-                searchText: "",
-                Userid: USER_ID,
-                SegmentId: segmentId,
-                Offset: 0,
-                PageSize: 1000000,
-                Draw: 1
-              })
-            };
-            const segRes = await fetch(`${AZURE_BASE_URL}/Partner/LoadPartnerUsersDetail`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify(segPayload)
-            });
-            const segData = await segRes.json();
-            if (segData && segData.data && Array.isArray(segData.data)) {
-              segData.data.forEach(user => {
-                // Ensure we get the ID regardless of exact case
-                const id = user.UserId || user.User_ID || user.Id || user.ID || user.userid;
-                if (id && !finalUsers.includes(Number(id))) {
-                  finalUsers.push(Number(id));
-                }
-              });
-            }
-          } catch (segErr) {
-            console.error('Failed to load users for segment:', segmentId, segErr);
-          }
-        }
-      }
 
       const payload = {
         Token: API_TOKEN,
@@ -266,10 +248,9 @@ const BannerModule = () => {
           BannerDescription: bannerDescription,
           StartDate: startDate ? startDate.format('YYYY-MM-DD') : "",
           EndDate: endDate ? endDate.format('YYYY-MM-DD') : "",
-          ApplicationCode: applicationCode || "sales",
+          ApplicationCode: applicationCode || "",
           ModuleCode: moduleCode || "",
-          Users: finalUsers.join(','),
-          UserSegments: Array.isArray(userSegments) ? userSegments.join(',') : ""
+          Users: finalUsers.join(',')
         })
       };
 
@@ -291,6 +272,42 @@ const BannerModule = () => {
     } catch (error) {
       console.error(error);
       notification.error({ message: 'Error saving banner' });
+    }
+  };
+
+  const handleExpire = async () => {
+    if (!editingId) return;
+    try {
+      let finalUsers = Array.isArray(users) ? [...users] : [];
+      const payload = {
+        Token: API_TOKEN,
+        Details: JSON.stringify({
+          Mode: "SaveBanner",
+          UserId: USER_ID,
+          BannerId: editingId,
+          BannerTitle: bannerTitle,
+          BannerDescription: bannerDescription,
+          StartDate: startDate ? startDate.format('YYYY-MM-DD') : "",
+          EndDate: dayjs().format('YYYY-MM-DD'),
+          ApplicationCode: applicationCode || "sales",
+          ModuleCode: moduleCode || "",
+          Users: finalUsers.join(',')
+        })
+      };
+
+      const response = await fetch(BANNER_API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      if (!response.ok) throw new Error('Network response was not ok');
+      
+      notification.success({ message: 'Banner expired successfully!' });
+      setIsDrawerOpen(false);
+      fetchBanners();
+    } catch (error) {
+      console.error(error);
+      notification.error({ message: 'Error expiring banner' });
     }
   };
 
@@ -402,8 +419,49 @@ const BannerModule = () => {
         onSearch={(searchData) => console.log('Searching banners with', searchData)}
       />
 
-      <div className="flex-1 min-h-0">
-        <PremiumTable 
+      <div className="flex-1 min-h-0 flex flex-col">
+        <div className="px-6 py-3 bg-white border-b border-gray-100 flex items-center gap-4 shrink-0">
+          <label className="text-sm font-semibold text-gray-700">Filter By Application:</label>
+          <Select 
+            style={{ width: 180 }}
+            placeholder="Application"
+            value={listAppCode}
+            onChange={(value) => {
+              setListAppCode(value);
+              setListModCode('');
+            }}
+          >
+            <Option value="sales">SALES</Option>
+            <Option value="location">LOCATION</Option>
+            <Option value="ai">AI</Option>
+            <Option value="whatsapp">WHATSAPP</Option>
+            <Option value="">GLOBAL (All Apps)</Option>
+          </Select>
+
+          <label className="text-sm font-semibold text-gray-700 ml-4">Filter By Module:</label>
+          <Select 
+            style={{ width: 250 }}
+            placeholder="All Modules"
+            value={listModCode}
+            onChange={(value) => setListModCode(value || '')}
+            allowClear
+            showSearch
+            optionFilterProp="children"
+            disabled={!listAppCode}
+          >
+            {moduleOptions.map(mod => {
+              const val = mod.ModuleCode || mod.ModuleName;
+              return (
+                <Option key={val} value={val}>
+                  {mod.ModuleName || mod.ModuleCode || 'Unknown Module'}
+                </Option>
+              );
+            })}
+          </Select>
+        </div>
+        
+        <div className="flex-1 min-h-0 relative">
+          <PremiumTable 
           columns={columns}
           dataSource={banners}
           rowKey="BannerId"
@@ -418,6 +476,7 @@ const BannerModule = () => {
             ]
           }}
         />
+        </div>
       </div>
 
       <OverlayWidget
@@ -426,20 +485,30 @@ const BannerModule = () => {
         title={editingId ? "Edit Banner" : "Create New Banner"}
         width="w-[500px]"
         footer={
-          <>
-            <button 
-              onClick={() => setIsDrawerOpen(false)}
-              className="px-4 py-2 border border-gray-200 text-gray-600 rounded-lg hover:bg-gray-50 font-medium transition-colors"
-            >
-              Cancel
-            </button>
-            <button 
-              onClick={handleSave}
-              className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium transition-colors shadow-sm"
-            >
-              Save Banner
-            </button>
-          </>
+          <div className="flex w-full">
+            {editingId && (
+              <button 
+                onClick={handleExpire}
+                className="px-4 py-2 mr-auto border border-red-200 text-red-600 rounded-lg hover:bg-red-50 font-medium transition-colors"
+              >
+                Expire Banner
+              </button>
+            )}
+            <div className="ml-auto flex gap-2">
+              <button 
+                onClick={() => setIsDrawerOpen(false)}
+                className="px-4 py-2 border border-gray-200 text-gray-600 rounded-lg hover:bg-gray-50 font-medium transition-colors"
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={handleSave}
+                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium transition-colors shadow-sm"
+              >
+                Save Banner
+              </button>
+            </div>
+          </div>
         }
       >
         <div className="space-y-5">
@@ -450,6 +519,8 @@ const BannerModule = () => {
               placeholder="Enter banner title" 
               value={bannerTitle} 
               onChange={(e) => setBannerTitle(e.target.value)} 
+              maxLength={200}
+              showCount
             />
           </div>
           
@@ -461,6 +532,8 @@ const BannerModule = () => {
               placeholder="Describe the banner content..." 
               value={bannerDescription} 
               onChange={(e) => setBannerDescription(e.target.value)} 
+              maxLength={1000}
+              showCount
             />
           </div>
 
@@ -472,6 +545,7 @@ const BannerModule = () => {
                 style={{ width: '100%' }}
                 value={startDate}
                 onChange={(date) => setStartDate(date)}
+                getPopupContainer={(triggerNode) => triggerNode.parentNode}
               />
             </div>
             <div className="flex-1">
@@ -481,6 +555,7 @@ const BannerModule = () => {
                 style={{ width: '100%' }}
                 value={endDate}
                 onChange={(date) => setEndDate(date)}
+                getPopupContainer={(triggerNode) => triggerNode.parentNode}
               />
             </div>
           </div>
@@ -488,30 +563,59 @@ const BannerModule = () => {
           <div className="flex gap-4">
             <div className="flex-1">
               <label className="block text-sm font-semibold text-gray-700 mb-1">Application Code</label>
-              <Input 
+              <Select 
                 size="large"
-                placeholder="e.g., SALES" 
-                value={applicationCode} 
-                onChange={(e) => setApplicationCode(e.target.value)} 
-              />
+                placeholder="Application"
+                style={{ width: '100%' }}
+                value={applicationCode}
+                onChange={(value) => {
+                  setApplicationCode(value);
+                  setModuleCode('');
+                }}
+                getPopupContainer={(triggerNode) => triggerNode.parentNode}
+              >
+                <Option value="sales">SALES</Option>
+                <Option value="location">LOCATION</Option>
+                <Option value="ai">AI</Option>
+                <Option value="whatsapp">WHATSAPP</Option>
+                <Option value="">GLOBAL</Option>
+              </Select>
             </div>
+            
             <div className="flex-1">
               <label className="block text-sm font-semibold text-gray-700 mb-1">Module Code</label>
-              <Input 
+              <Select 
                 size="large"
-                placeholder="e.g., CRM" 
+                placeholder="All Modules" 
+                style={{ width: '100%' }}
                 value={moduleCode} 
-                onChange={(e) => setModuleCode(e.target.value)} 
-              />
+                onChange={(value) => setModuleCode(value || '')}
+                showSearch
+                allowClear
+                disabled={!applicationCode}
+                optionFilterProp="children"
+                getPopupContainer={(triggerNode) => triggerNode.parentNode}
+              >
+                {formModuleOptions.map(mod => {
+                  const val = mod.ModuleCode || mod.ModuleName;
+                  return (
+                    <Option key={val} value={val}>
+                      {mod.ModuleName || mod.ModuleCode || 'Unknown Module'}
+                    </Option>
+                  );
+                })}
+              </Select>
             </div>
           </div>
 
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-1">Target Users</label>
+            <label className="block text-sm font-semibold text-gray-700 mb-1">
+              Target Users <span className="font-normal text-xs text-gray-400 ml-2">(Leave empty to target everyone)</span>
+            </label>
             <Select
               mode="multiple"
               size="large"
-              placeholder="Select target users"
+              placeholder="Select specific users or leave empty for ALL"
               style={{ width: '100%' }}
               dropdownStyle={{ zIndex: 10000 }}
               value={users}
@@ -521,32 +625,12 @@ const BannerModule = () => {
             >
               {userOptions.map(user => (
                 <Option key={user.User_ID} value={user.User_ID}>
-                  {user.Name}
+                  {user.User_ID} - {user.Name}
                 </Option>
               ))}
             </Select>
           </div>
 
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-1">Target Segments</label>
-            <Select
-              mode="multiple"
-              size="large"
-              placeholder="Select target user segments"
-              style={{ width: '100%' }}
-              dropdownStyle={{ zIndex: 10000 }}
-              value={userSegments}
-              onChange={(values) => setUserSegments(values)}
-              optionFilterProp="children"
-              showSearch
-            >
-              {segmentOptions.map(seg => (
-                <Option key={seg.Id} value={seg.Id}>
-                  {seg.SegmentName}
-                </Option>
-              ))}
-            </Select>
-          </div>
         </div>
       </OverlayWidget>
     </div>

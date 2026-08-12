@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Button, Input, Form, message } from 'antd';
 import { UserOutlined, LockOutlined } from '@ant-design/icons';
 
-const NEWV3_BASE_URL = process.env.REACT_APP_SERVICES_API_BASE_URL || 'http://localhost:62194/';
+const NEWV3_BASE_URL = process.env.REACT_APP_SERVICES_API_BASE_URL_NEW || 'http://localhost:62194/';
 
 const Login = () => {
   const [loading, setLoading] = useState(false);

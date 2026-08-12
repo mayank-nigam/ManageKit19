@@ -11,7 +11,7 @@ import API_ENDPOINTS from '../../config/apiEndpoints';
 import './HelpModule.css';
 
 // const NEWV3_BASE_URL = process.env.REACT_APP_SERVICES_API_BASE_URL || 'http://localhost:62194/';
-const NEWV3_BASE_URL = process.env.REACT_APP_SERVICES_AZURE_BASEURL || 'http://localhost:62194/';
+const NEWV3_BASE_URL = process.env.REACT_APP_SERVICES_API_BASE_URL || 'http://localhost:62194/';
 const HELP_API_URL = `${NEWV3_BASE_URL}${API_ENDPOINTS.BANNER.banner}`;
 const API_TOKEN = "-2295521862261168";
 const USER_ID = 34594;
@@ -52,10 +52,54 @@ const HelpModule = () => {
   const [currentPage, setCurrentPage] = useState('');
   const [isActive, setIsActive] = useState(1);
   const [qaList, setQaList] = useState([{ Title: '', Description: '', VideoUrl: '' }]);
+  const [applicationCode, setApplicationCode] = useState('SALES');
+  const [users, setUsers] = useState([]);
+  const [userOptions, setUserOptions] = useState([]);
 
   useEffect(() => {
     fetchHelpContent();
   }, [selectedModuleFilter]);
+
+  const fetchUserOptions = async () => {
+    try {
+      const payload = {
+        Token: API_TOKEN,
+        Details: JSON.stringify({ Mode: "UserList", UserId: USER_ID })
+      };
+
+      const response = await fetch(HELP_API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      if (response.ok) {
+        const rawText = await response.text();
+        let data;
+        try { data = JSON.parse(rawText); } catch(e) { return; }
+
+        let parsed = typeof data === 'string' ? JSON.parse(data) : data;
+        let details = parsed.Details;
+        if (typeof details === 'string') {
+          try { details = JSON.parse(details); } catch(e) {}
+        }
+        
+        let usersArr = [];
+        if (Array.isArray(parsed)) usersArr = parsed;
+        else if (Array.isArray(details)) usersArr = details;
+        else if (details && Array.isArray(details.data)) usersArr = details.data;
+        else if (details && Array.isArray(details.Data)) usersArr = details.Data;
+        else if (details && Array.isArray(details.Table)) usersArr = details.Table;
+        else if (parsed.data && Array.isArray(parsed.data)) usersArr = parsed.data;
+        else if (parsed.Data && Array.isArray(parsed.Data)) usersArr = parsed.Data;
+        else if (parsed.Table && Array.isArray(parsed.Table)) usersArr = parsed.Table;
+        
+        setUserOptions(usersArr);
+      }
+    } catch (error) {
+      console.error("Error fetching users:", error);
+    }
+  };
 
   const fetchHelpContent = async () => {
     setLoading(true);
@@ -125,13 +169,18 @@ const HelpModule = () => {
       setCurrentPage(helpItem.CurrentPage || '');
       setIsActive(helpItem.IsActive !== undefined ? helpItem.IsActive : 1);
       setQaList(helpItem.JsonContent && helpItem.JsonContent.length > 0 ? [...helpItem.JsonContent] : [{ Title: '', Description: '', VideoUrl: '', IsHidden: false }]);
+      setApplicationCode(helpItem.ApplicationCode || 'SALES');
+      setUsers(helpItem.Users ? helpItem.Users.split(',').filter(Boolean).map(u => Number(u)) : []);
     } else {
       setEditingId(null);
       setCurrentPage(selectedModuleFilter);
       setIsActive(1);
       setQaList([{ Title: '', Description: '', VideoUrl: '', IsHidden: false }]);
+      setApplicationCode('SALES');
+      setUsers([]);
     }
     setIsDrawerOpen(true);
+    fetchUserOptions();
   };
 
   const handleAddQuestion = () => {
@@ -263,12 +312,16 @@ const HelpModule = () => {
     }
 
     try {
+      let finalUsers = Array.isArray(users) ? [...users] : [];
+
       const payload = {
         Token: API_TOKEN,
         Details: JSON.stringify({
           Mode: "SaveHelpContent",
           UserId: USER_ID,
           CurrentPage: currentPage,
+          ApplicationCode: applicationCode || "SALES",
+          Users: finalUsers.join(','),
           JsonContent: validQaList
         })
       };
@@ -463,6 +516,56 @@ const HelpModule = () => {
                     {mod.name} ({mod.code})
                   </Option>
                 ))}
+              </Select>
+            </div>
+          </div>
+          
+          <div className="flex gap-4 mt-4">
+            <div className="flex-1">
+              <label className="block text-sm font-semibold text-gray-700 mb-1">App Code</label>
+              <Select 
+                size="large"
+                style={{ width: '100%' }}
+                dropdownStyle={{ zIndex: 10000 }}
+                placeholder="Select App Code" 
+                value={applicationCode} 
+                onChange={(value) => setApplicationCode(value)} 
+              >
+                <Option value="SALES">SALES</Option>
+                <Option value="AI">AI</Option>
+                <Option value="WHATSAPP">WHATSAPP</Option>
+                <Option value="LOCATION">LOCATION</Option>
+                <Option value="HR">HR</Option>
+                <Option value="LEADERBOARD">LEADERBOARD</Option>
+                <Option value="ALL">ALL</Option>
+              </Select>
+            </div>
+            
+            <div className="flex-1">
+              <label className="block text-sm font-semibold text-gray-700 mb-1">Allowed Users (Optional)</label>
+              <Select 
+                mode="multiple"
+                size="large"
+                style={{ width: '100%' }}
+                dropdownStyle={{ zIndex: 10000 }}
+                placeholder="All Users (Leave empty)"
+                value={users}
+                onChange={setUsers}
+                filterOption={(input, option) => {
+                  const children = option?.children;
+                  const text = Array.isArray(children) ? children.join('') : String(children || '');
+                  return text.toLowerCase().includes(input.toLowerCase());
+                }}
+              >
+                {userOptions.map(u => {
+                  const userName = u.Name || u.UserName || u.Title || 'Unknown User';
+                  const userId = u.ID || u.UserId || u.User_ID;
+                  return (
+                    <Option key={userId} value={userId}>
+                      {userName} (ID: {userId})
+                    </Option>
+                  );
+                })}
               </Select>
             </div>
           </div>
