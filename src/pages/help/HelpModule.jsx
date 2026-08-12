@@ -19,34 +19,15 @@ const USER_ID = 34594;
 const { TextArea } = Input;
 const { Option } = Select;
 
-const moduleOptions = [
-  { name: "Revenue", code: "PAG10224" },
-  { name: "Invoices", code: "PAG10223" },
-  { name: "Quotations", code: "PAG10222" },
-  { name: "Lead Activities", code: "PAG10037" },
-  { name: "Pipeline Deal", code: "PAG10038" },
-  { name: "Pipeline History", code: "PAG10307" },
-  { name: "Call List", code: "PAG10381" },
-  { name: "Create Event", code: "PAG10333" },
-  { name: "Webook Events", code: "PAG10332" },
-  { name: "Credit Note", code: "PAG10384" },
-  { name: "Customer Ledger", code: "PAG10274" },
-  { name: "Conversions", code: "PAG10033" },
-  { name: "Leads", code: "PAG10031" },
-  { name: "Segmentation", code: "PAG10036" },
-  { name: "Merge Duplicate Enquiry", code: "PAG10305" },
-  { name: "Follow-ups", code: "PAG10039" },
-  { name: "Enquiries", code: "PAG10002" },
-  { name: "Tasks", code: "PAG10034" },
-  { name: "Appointments", code: "PAG10035" }
-];
-
 const HelpModule = () => {
+  const [moduleOptions, setModuleOptions] = useState([]);
+  const [formModuleOptions, setFormModuleOptions] = useState([]);
+  
   const [helpContents, setHelpContents] = useState([]);
   const [loading, setLoading] = useState(false);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [editingId, setEditingId] = useState(null);
-  const [selectedModuleFilter, setSelectedModuleFilter] = useState(moduleOptions[0].code);
+  const [selectedModuleFilter, setSelectedModuleFilter] = useState('');
 
   // Form states
   const [currentPage, setCurrentPage] = useState('');
@@ -57,8 +38,66 @@ const HelpModule = () => {
   const [userOptions, setUserOptions] = useState([]);
 
   useEffect(() => {
+    fetchModuleOptions('SALES').then(res => setModuleOptions(res || []));
+  }, []);
+
+  useEffect(() => {
+    fetchModuleOptions(applicationCode).then(res => setFormModuleOptions(res || []));
+  }, [applicationCode]);
+
+  useEffect(() => {
     fetchHelpContent();
   }, [selectedModuleFilter]);
+
+  const fetchModuleOptions = async (appCode) => {
+    try {
+      const payload = {
+        Token: API_TOKEN,
+        Details: JSON.stringify({ Mode: "GetApplicationURLs", ApplicationCode: appCode || null })
+      };
+      const response = await fetch(`${NEWV3_BASE_URL}Common/CommonActionModebased`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      if (response.ok) {
+        const rawText = await response.text();
+        let data;
+        try { data = JSON.parse(rawText); } catch(e) { return []; }
+        let parsed = typeof data === 'string' ? JSON.parse(data) : data;
+        let details = parsed.Details;
+        if (typeof details === 'string') {
+          try { details = JSON.parse(details); } catch(e) {}
+        }
+        let modulesArr = [];
+        if (Array.isArray(parsed)) modulesArr = parsed;
+        else if (Array.isArray(details)) modulesArr = details;
+        else if (details && Array.isArray(details.data)) modulesArr = details.data;
+        else if (details && Array.isArray(details.Data)) modulesArr = details.Data;
+        else if (details && Array.isArray(details.Table)) modulesArr = details.Table;
+        
+        const uniqueOptions = [];
+        const seenCodes = new Set();
+        
+        modulesArr.forEach(mod => {
+          let code = mod.ModuleCode;
+          if (!code || seenCodes.has(code)) return;
+          
+          seenCodes.add(code);
+          uniqueOptions.push({
+            ...mod,
+            ModuleCode: code,
+            ModuleName: mod.ModuleName || code
+          });
+        });
+        
+        return uniqueOptions;
+      }
+    } catch (err) {
+      console.error("Error fetching modules:", err);
+    }
+    return [];
+  };
 
   const fetchUserOptions = async () => {
     try {
@@ -378,8 +417,8 @@ const HelpModule = () => {
       dataIndex: 'CurrentPage',
       key: 'CurrentPage',
       render: (text) => {
-        const mod = moduleOptions.find(m => m.code === text);
-        return <span className="font-semibold text-gray-800">{mod ? mod.name : text}</span>;
+        const mod = moduleOptions.find(m => m.ModuleCode === text);
+        return <span className="text-sm font-medium">{mod ? mod.ModuleName : text || '-'}</span>;
       },
       width: '20%'
     },
@@ -456,11 +495,14 @@ const HelpModule = () => {
           showSearch
           optionFilterProp="children"
         >
-          {moduleOptions.map(mod => (
-            <Option key={mod.code} value={mod.code}>
-              {mod.name} ({mod.code})
-            </Option>
-          ))}
+          {moduleOptions.map(mod => {
+            const val = mod.ModuleCode || mod.ModuleName;
+            return (
+              <Option key={val} value={val}>
+                {mod.ModuleName ? `${mod.ModuleName} - ${val}` : val || 'Unknown Module'}
+              </Option>
+            );
+          })}
         </Select>
       </div>
 
@@ -511,11 +553,14 @@ const HelpModule = () => {
                 disabled={!!editingId}
               >
                 <Option value="">All Pages</Option>
-                {moduleOptions.map(mod => (
-                  <Option key={mod.code} value={mod.code}>
-                    {mod.name} ({mod.code})
-                  </Option>
-                ))}
+                {formModuleOptions.map(mod => {
+                  const val = mod.ModuleCode || mod.ModuleName;
+                  return (
+                    <Option key={val} value={val}>
+                      {mod.ModuleName ? `${mod.ModuleName} - ${val}` : val || 'Unknown Module'}
+                    </Option>
+                  );
+                })}
               </Select>
             </div>
           </div>

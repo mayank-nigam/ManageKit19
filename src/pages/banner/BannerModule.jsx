@@ -112,9 +112,9 @@ const BannerModule = () => {
     try {
       const payload = {
         Token: API_TOKEN,
-        Details: JSON.stringify({ Mode: "SM", ApplicationCode: appCode || null })
+        Details: JSON.stringify({ Mode: "GetApplicationURLs", ApplicationCode: appCode || null })
       };
-      const response = await fetch(MODULES_API_URL, {
+      const response = await fetch(`${NEWV3_BASE_URL}Common/CommonActionModebased`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
@@ -122,7 +122,7 @@ const BannerModule = () => {
       if (response.ok) {
         const rawText = await response.text();
         let data;
-        try { data = JSON.parse(rawText); } catch(e) { return; }
+        try { data = JSON.parse(rawText); } catch(e) { return []; }
         let parsed = typeof data === 'string' ? JSON.parse(data) : data;
         let details = parsed.Details;
         if (typeof details === 'string') {
@@ -135,7 +135,23 @@ const BannerModule = () => {
         else if (details && Array.isArray(details.Data)) modulesArr = details.Data;
         else if (details && Array.isArray(details.Table)) modulesArr = details.Table;
         
-        return modulesArr;
+        // Deduplicate and Map ApplicationURL and Title to ModuleCode and ModuleName
+        const uniqueOptions = [];
+        const seenCodes = new Set();
+        
+        modulesArr.forEach(mod => {
+          let code = mod.ModuleCode;
+          if (!code || seenCodes.has(code)) return;
+          
+          seenCodes.add(code);
+          uniqueOptions.push({
+            ...mod,
+            ModuleCode: code,
+            ModuleName: mod.ModuleName || code
+          });
+        });
+        
+        return uniqueOptions;
       }
     } catch (err) {
       console.error("Error fetching modules:", err);
@@ -453,7 +469,7 @@ const BannerModule = () => {
               const val = mod.ModuleCode || mod.ModuleName;
               return (
                 <Option key={val} value={val}>
-                  {mod.ModuleName || mod.ModuleCode || 'Unknown Module'}
+                  {mod.ModuleName ? `${mod.ModuleName} - ${val}` : val || 'Unknown Module'}
                 </Option>
               );
             })}
@@ -600,7 +616,7 @@ const BannerModule = () => {
                   const val = mod.ModuleCode || mod.ModuleName;
                   return (
                     <Option key={val} value={val}>
-                      {mod.ModuleName || mod.ModuleCode || 'Unknown Module'}
+                      {mod.ModuleName ? `${mod.ModuleName} - ${val}` : val || 'Unknown Module'}
                     </Option>
                   );
                 })}
