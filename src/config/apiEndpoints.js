@@ -264,9 +264,7 @@ const API_ENDPOINTS = {
 
   },
 
-  TOKEN: {
-    UNIVERSAL_TOKEN: -2295521862261168
-  },
+
 
   APPOINTMENTS: {
     LIST: '/appointments',
@@ -335,7 +333,7 @@ const API_ENDPOINTS = {
     //unsed
     ADD_COMMENT: '/UserCRMCampaign/Service/ScoreCard.asmx/funcToGetScoreCardDetails',
     MASS_UPDATE: '/UserCRMCampaign/Service/ToDoService.asmx/MassUpdateNewTaskOrAppointment',
-    MARK_AS_COMPLETE: '/EmployeeTracker/PhysicalAppointmentOutcomeUpdate',
+    PHYSICAL_APPOINTMENT_MARK_AS_COMPLETE: '/EmployeeTracker/PhysicalAppointmentOutcomeUpdate',
     //WHATSAPP_TEMPLATE: '/UserCRMCampaign/Service/IMSService.asmx/GetChannelTemplateListByUserId',
     WHATSAPP_TEMPLATE: '/IMSMOB/GetChannelTemplateListByUserId',
     REPLACED_JSON_STR_WHATSAPP_SEND: '/UserCRM/ReplacedJsonStr',
