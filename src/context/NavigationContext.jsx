@@ -116,7 +116,7 @@ const MENU_MAPPING = {
   'Credit Note Settings': { name: 'Credit Note Settings', href: '/credit-notes/settings', icon: FiCreditCard },
 
   'User Role': { name: 'User Role', href: '/roles/user-role', icon: FiUserPlus },
-  'Manage Team': { name: 'Manage Team', href: '#', icon: FiUsers },
+  'Manage Team': { name: 'Team Master', href: '/roles/team-master', icon: FiUsers },
   'Team Master': { name: 'Team Master', href: '/roles/team-master', icon: FiUsers },
   'User Role Mapping': { name: 'User Role Mapping', href: '/roles/user-role-mapping', icon: FiLink },
   'Role Permission Mapping': { name: 'Role Permission Mapping', href: '/roles/role-permission-mapping', icon: FiShield },
@@ -138,66 +138,186 @@ export const NavigationProvider = ({ children }) => {
   const [currentPageCode, setCurrentPageCode] = useState("");
 
   const fetchMenu = async (silent = false) => {
+    const { TokenId, userId } = getSession();
+    if (globalFetchedMenuUserId === userId && navigation.length > 1) return;
+    globalFetchedMenuUserId = userId;
+
     if (!silent) setLoadingNav(true);
     try {
-      // Hardcoded Admin Navigation Structure
-      const finalNav = [
-        { name: 'Dashboard', href: '/', icon: FiHome },
-        ...((getSession().userId === 335 || getSession().userId === 34594) ? [{
-          name: 'Settings',
-          icon: FiSettings,
-          href: '#',
-          subItems: [
-            // { name: 'General Settings', href: '/settings/general', icon: FiSettings },
-            // { name: 'User Management', href: '/settings/users', icon: FiUsers },
-            { name: 'Banner Management', href: '/banner', icon: FiImage },
-            { name: 'System Updates', href: '/updates', icon: FiRadio },
-            { name: 'Help Management', href: '/help', icon: FiBook }
-          ]
-        }] : []),
-        {
-          name: 'Roles & Rights',
-          icon: FiShield,
-          href: '#',
-          subItems: [
-            { name: 'User Role', href: '/roles/user-role', icon: FiUserPlus },
-            { name: 'Team Master', href: '/roles/team-master', icon: FiUsers },
-            { name: 'User Role Mapping', href: '/roles/user-role-mapping', icon: FiUsers },
-            { name: 'Role Permission Mapping', href: '/roles/role-permission-mapping', icon: FiLayout },
-            { name: 'Field Masking', href: '/roles/field-masking', icon: FiLayout },
-            ...((getSession().userId === 335 ) ? [{ name: 'Module Master', href: '/roles/module-master', icon: FiLayout }] : []),
-            // { name: 'Collaborator Team', href: '/master-settings/collaborator-team', icon: FiUsers },
-            // { name: 'Collaborator Type', href: '/master-settings/collaborator-type', icon: FiUsers }
-          ]
-        },
-        // {
-        //   name: 'Reports',
-        //   icon: FiLayout,
-        //   href: '#',
-        //   subItems: [
-        //     { name: 'Activity Report', href: '/report-pages/activity', icon: FiActivity }
-        //   ]
-        // }
-      ];
+      const token = TokenId || "-2295521862261168";
+      const uid = userId || "34594";
+      const API_BASE = (process.env.REACT_APP_SERVICES_AZURE_BASEURL || '').replace(/\/$/, '');
+      const url = `${API_BASE}${API_ENDPOINTS.COMMON.GET_ALL_HIERARCHICAL_DISPLAY_BY_USER_ID}`;
 
-      setNavigation(finalNav);
-
-      // Extract all allowed paths
-      const routes = [];
-      const extractRoutes = (navItems) => {
-        navItems.forEach(curr => {
-          if (curr.href && curr.href !== '#') routes.push(curr.href);
-          if (curr.subItems) {
-            extractRoutes(curr.subItems);
-          }
-        });
+      const payload = {
+        Token: token,
+        Details: {
+          UserId: String(uid)
+        }
       };
-      extractRoutes(finalNav);
 
-      setAllowedRoutes([...routes]);
-      setModulePermissions([]); // Can hardcode if needed
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        const list = data?.Details || data?.d || data?.Data || data?.data || data || [];
+        let parsedList = Array.isArray(list) ? list : (typeof list === 'string' ? JSON.parse(list) : []);
+
+        const buildMenuTree = (parentId, rootTitle) => {
+          const children = parsedList.filter(m => (m.parentId ?? m.ParentId) === parentId);
+          children.sort((a, b) => (a.Sequence ?? a.sequence ?? 0) - (b.Sequence ?? b.sequence ?? 0));
+
+          const validChildren = children.filter(m => {
+            if (m.view ?? m.View === true) return true;
+            if (m.Type === 'Module' || m.type === 'Module') {
+              const moduleId = m.childId ?? m.MenuId;
+              const hasVisibleDescendant = (nodeId) => {
+                const sub = parsedList.filter(x => (x.parentId ?? x.ParentId) === nodeId);
+                if (sub.some(x => (x.view ?? x.View) === true)) return true;
+                return sub.some(x => hasVisibleDescendant(x.childId ?? x.MenuId));
+              };
+              return hasVisibleDescendant(moduleId);
+            }
+            return false;
+          });
+
+          const rawMapped = validChildren.map(child => {
+            const title = child.childName || child.Title;
+            const childId = child.childId ?? child.MenuId;
+            let mapping = MENU_MAPPING[title] || { name: title, href: '#', icon: FiChevronRight };
+
+            if ((title === 'Tasks' || title === 'Task') && (rootTitle === 'Settings' || rootTitle === 'Setting')) {
+               mapping = { name: 'Task Setting', href: '/master-settings/task-settings', icon: FiCheckSquare };
+            }
+
+            const subItems = buildMenuTree(childId, rootTitle);
+
+            if (subItems.length > 0) {
+              return { ...mapping, description: child.description || child.Description || '', subItems };
+            }
+
+            if ((child.Type === 'Module' || child.type === 'Module') && subItems.length === 0) return null;
+            if (mapping.href === '#' && subItems.length === 0) return null;
+
+            return { ...mapping, description: child.description || child.Description || '' };
+          }).filter(Boolean);
+
+          const uniqueItems = [];
+          const seenNames = new Set();
+          for (const item of rawMapped) {
+            if (!seenNames.has(item.name)) {
+              seenNames.add(item.name);
+              uniqueItems.push(item);
+            }
+          }
+          return uniqueItems;
+        };
+
+        const finalNav = [];
+        const dashboard = parsedList.find(m => (m.childName || m.Title) === 'Dashboard');
+        if (dashboard && (dashboard.view ?? dashboard.View)) {
+          finalNav.push({ name: 'Dashboard', href: '/', icon: FiHome });
+        } else {
+          finalNav.push({ name: 'Dashboard', href: '/', icon: FiHome });
+        }
+
+        // Only allow Dashboard from API. We will append the static menus manually.
+        // We do NOT want Sales, Marketing, Reports, etc. to show up here.
+        const rootModules = parsedList.filter(m => (m.parentId ?? m.ParentId) === 0);
+
+        rootModules.forEach(root => {
+          const title = root.childName || root.Title;
+          if (title === 'Dashboard') return; 
+
+          // Filter out everything else
+          return;
+        });
+
+        // Append static Settings menu
+        if (getSession().userId === 335) {
+          finalNav.push({
+            name: 'Settings',
+            icon: FiSettings,
+            href: '#',
+            subItems: [
+              { name: 'Banner Management', href: '/banner', icon: FiImage },
+              { name: 'System Updates', href: '/updates', icon: FiRadio },
+              { name: 'Help Management', href: '/help', icon: FiBook }
+            ]
+          });
+        }
+
+        // Dynamically append Roles & Rights from API
+        const rolesModule = parsedList.find(m => (m.childName || m.Title) === 'Roles & Rights' || (m.childName || m.Title) === 'Roles and Rights');
+        if (rolesModule) {
+           const subItems = buildMenuTree(rolesModule.childId ?? rolesModule.MenuId, rolesModule.childName || rolesModule.Title);
+           
+           // Inject Module Master for admin if not present
+           if (getSession().userId === 335 && !subItems.find(si => si.href === '/roles/module-master')) {
+               subItems.push({ name: 'Module Master', href: '/roles/module-master', icon: FiLayout });
+           }
+
+           if (subItems.length > 0 || (rolesModule.view ?? rolesModule.View)) {
+              finalNav.push({
+                name: 'Roles & Rights',
+                icon: FiShield,
+                href: '#',
+                subItems: subItems.length > 0 ? subItems : undefined
+              });
+           }
+        } else {
+           // Fallback in case API completely fails or user doesn't have it, but they are admin
+           if (getSession().userId === 335 || getSession().userId === 34594) {
+               finalNav.push({
+                 name: 'Roles & Rights',
+                 icon: FiShield,
+                 href: '#',
+                 subItems: [
+                   { name: 'User Role', href: '/roles/user-role', icon: FiUserPlus },
+                   { name: 'Team Master', href: '/roles/team-master', icon: FiUsers },
+                   { name: 'User Role Mapping', href: '/roles/user-role-mapping', icon: FiUsers },
+                   { name: 'Role Permission Mapping', href: '/roles/role-permission-mapping', icon: FiLayout },
+                   { name: 'Field Masking', href: '/roles/field-masking', icon: FiLayout },
+                   ...((getSession().userId === 335 ) ? [{ name: 'Module Master', href: '/roles/module-master', icon: FiLayout }] : [])
+                 ]
+               });
+           }
+        }
+
+        setNavigation(finalNav);
+
+        const routes = [];
+        const extractRoutes = (navItems) => {
+          navItems.forEach(curr => {
+            if (curr.href && curr.href !== '#') routes.push(curr.href);
+            if (curr.subItems) {
+              extractRoutes(curr.subItems);
+            }
+          });
+        };
+        extractRoutes(finalNav);
+
+        const settingRoutes = [
+           '/roles/user-role',
+           '/roles/team-master',
+           '/roles/user-role-mapping',
+           '/roles/role-permission-mapping',
+           '/roles/field-masking',
+           '/roles/module-master',
+           '/banner',
+           '/updates',
+           '/help'
+        ];
+
+        setAllowedRoutes([...routes, ...settingRoutes]);
+        setModulePermissions(parsedList);
+      }
     } catch (err) {
-      console.error('Error setting sidebar menu:', err);
+      console.error('Error fetching sidebar menu:', err);
     } finally {
       if (!silent) setLoadingNav(false);
     }

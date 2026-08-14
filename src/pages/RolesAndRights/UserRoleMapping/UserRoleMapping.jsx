@@ -5,10 +5,11 @@ import PremiumTable from '../../../components/common/PremiumTable/PremiumTable';
 import OverlayWidget from '../../../components/common/OverlayWidget/OverlayWidget';
 import GlobalSubheader from '../../../components/common/GlobalSubheader/GlobalSubheader';
 import Alert from '../../../components/common/Alert/Alert';
+import API_ENDPOINTS, { buildUrl } from '../../../config/apiEndpoints';
 
 const NEWV3_BASE_URL = process.env.REACT_APP_SERVICES_API_BASE_URL || 'http://localhost:62194/';
-const API_TOKEN = localStorage.getItem("API_TOKEN") || process.env.REACT_APP_TOKE_UNIVERSAL_TOKEN || "-2295521862261168";
-const USER_ID = parseInt(localStorage.getItem("USER_ID")) || 34594;// Using hardcoded ID per existing pattern
+const API_TOKEN = "-2295521862261168";
+const USER_ID = localStorage.getItem('USER_ID') || 335;
 
 const { Option } = Select;
 
@@ -22,6 +23,7 @@ const UserRoleMapping = () => {
   const [rolesList, setRolesList] = useState([]);
   const [selectedRole, setSelectedRole] = useState(null);
   const [userList, setUserList] = useState([]);
+  const [rawUserRoles, setRawUserRoles] = useState([]);
   const [isUsersLoading, setIsUsersLoading] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
 
@@ -57,17 +59,43 @@ const UserRoleMapping = () => {
   const fetchMappings = async () => {
     setLoading(true);
     try {
-      const response = await fetchApi(`${NEWV3_BASE_URL}UserAuth/GetUserRoleMappingMasterList`, {
+      const response = await fetchApi(`${NEWV3_BASE_URL}UserAuth/GetUserRoleMappingMasterListByUserId`, {
         Token: API_TOKEN,
-        LoggedUserId: USER_ID,
+        LoggedUserId: USER_ID.toString(),
         Message: "",
         MAC_Address: "",
         IP_Address: "",
-        Details: { Mode: "S", UserId: USER_ID, FilterText: "" }
+        Details: { Mode: "SR", UserId: USER_ID.toString(), FilterText: "" }
       });
       
       if (response.data && response.data.Details) {
-        setMappings(response.data.Details);
+        // Group the user-level data by RoleCode for the grid
+        const grouped = response.data.Details.reduce((acc, curr) => {
+          if (!curr.RoleCode) return acc;
+          
+          if (!acc[curr.RoleCode]) {
+            acc[curr.RoleCode] = {
+              RoleCode: curr.RoleCode,
+              RoleName: curr.RoleName || '-',
+              UsersCount: 0,
+              UserNamesList: [],
+              CreatedUser: curr.CreatedUser || '-',
+            };
+          }
+          
+          acc[curr.RoleCode].UsersCount += 1;
+          const nameToDisplay = curr.User_Login_And_Name || curr.User_Login || `User ID: ${curr.UserId}`;
+          acc[curr.RoleCode].UserNamesList.push(nameToDisplay);
+          
+          return acc;
+        }, {});
+
+        const aggregatedMappings = Object.values(grouped).map(m => ({
+          ...m,
+          UserNames: m.UserNamesList.join(', ')
+        }));
+
+        setMappings(aggregatedMappings);
       }
     } catch (error) {
       console.error("Error fetching role mappings:", error);
@@ -79,13 +107,13 @@ const UserRoleMapping = () => {
 
   const fetchRoles = async () => {
     try {
-      const response = await fetchApi(`${NEWV3_BASE_URL}UserAuth/GetRoleList`, {
+      const response = await fetchApi(`${NEWV3_BASE_URL}${API_ENDPOINTS.USER_AUTH.GET_ROLE_LIST.replace(/^\//, '')}`, {
         Token: API_TOKEN,
-        LoggedUserId: USER_ID,
+        LoggedUserId: USER_ID.toString(),
         Message: "",
         MAC_Address: "",
         IP_Address: "",
-        Details: { Mode: "S", UserId: USER_ID }
+        Details: { Mode: "S", UserId: USER_ID.toString() }
       });
       
       if (response.data && response.data.Details) {
@@ -104,62 +132,87 @@ const UserRoleMapping = () => {
   const resetForm = () => {
     setSelectedRole(null);
     setUserList([]);
+    setRawUserRoles([]);
     setIsEditMode(false);
   };
 
-  const loadRoleUsers = async (roleCode) => {
+  const loadAllUsers = async () => {
     setIsUsersLoading(true);
     try {
-      const response = await fetchApi(`${NEWV3_BASE_URL}UserAuth/GetUserRoleMapping_RoleCode`, {
+      const response = await fetchApi(`${NEWV3_BASE_URL}${API_ENDPOINTS.USER_AUTH.GET_USER_ROLE_MAPPING_MASTER_LIST_BY_USER_ID.replace(/^\//, '')}`, {
         Token: API_TOKEN,
-        LoggedUserId: USER_ID,
+        LoggedUserId: USER_ID.toString(),
         Message: "",
         MAC_Address: "",
         IP_Address: "",
-        Details: { Mode: "EN", RoleCode: roleCode, UserId: USER_ID }
+        Details: { Mode: "SR", UserId: USER_ID.toString() }
       });
       
       if (response.data && response.data.Details) {
-        // Map the data into an array with checkboxes for UI
-        const mappedUsers = response.data.Details.map(user => ({
-          ...user,
-          Check_ed: !!user.RoleName, // If they have a RoleName in this context, they are mapped to the role
-          Check_PeerView: !!user.PeerView // If PeerView has a value, it's mapped
-        }));
-        setUserList(mappedUsers);
+        setRawUserRoles(response.data.Details);
       } else {
-        // In case of error (like ParentId missing in old SP), we can fallback to empty array or try something else
-        setUserList([]);
-        showAlert('warning', 'Warning', 'Failed to load user list for this role due to database missing columns, proceeding with empty list.');
+        setRawUserRoles([]);
       }
     } catch (error) {
-      console.error("Error fetching users for role:", error);
-      setUserList([]);
-      showAlert('warning', 'Warning', 'Failed to load user list for this role, it might be an issue with the DB schema.');
+      console.error("Error fetching all users:", error);
+      setRawUserRoles([]);
     } finally {
       setIsUsersLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (!rawUserRoles.length) {
+      setUserList([]);
+      return;
+    }
+
+    const userMap = new Map();
+    rawUserRoles.forEach(user => {
+      if (!userMap.has(user.UserId)) {
+        userMap.set(user.UserId, {
+          UserId: user.UserId,
+          User_Login: user.User_Login || `User ID: ${user.UserId}`,
+          roles: []
+        });
+      }
+      if (user.RoleCode) {
+        userMap.get(user.UserId).roles.push({
+          RoleCode: user.RoleCode,
+          PeerView: user.PeerView
+        });
+      }
+    });
+
+    const mappedUsers = Array.from(userMap.values()).map(user => {
+      const hasRole = selectedRole ? user.roles.some(r => r.RoleCode === selectedRole) : false;
+      const hasPeerView = selectedRole ? user.roles.some(r => r.RoleCode === selectedRole && r.PeerView === true) : false;
+      
+      return {
+        ...user,
+        Check_ed: hasRole,
+        Check_PeerView: hasPeerView
+      };
+    });
+
+    setUserList(mappedUsers);
+  }, [rawUserRoles, selectedRole]);
 
   const handleOpenDrawer = async (mapping = null) => {
     resetForm();
     if (mapping) {
       setIsEditMode(true);
       setSelectedRole(mapping.RoleCode);
-      await loadRoleUsers(mapping.RoleCode);
-    } else {
-      await loadRoleUsers("");
     }
+    await Promise.all([
+      loadAllUsers(),
+      fetchRoles()
+    ]);
     setIsDrawerOpen(true);
   };
 
   const handleRoleChange = async (value) => {
     setSelectedRole(value);
-    if (value) {
-      await loadRoleUsers(value);
-    } else {
-      setUserList([]);
-    }
   };
 
   const handleCloseDrawer = () => {
@@ -197,11 +250,11 @@ const UserRoleMapping = () => {
         Details: details
       });
 
-      if (response.data.Details === 1) {
+      if (response.data.Details === 1 || (isEditMode && response.data.Details === -2)) {
         showAlert('success', 'Success', isEditMode ? 'Mapping updated successfully' : 'Mapping created successfully');
         handleCloseDrawer();
         fetchMappings();
-      } else if (response.data.Details === -2) {
+      } else if (!isEditMode && response.data.Details === -2) {
         showAlert('warning', 'Warning', 'Record Already Exist!');
       } else {
         showAlert('error', 'Error', 'Failed to save mapping');
@@ -302,7 +355,16 @@ const UserRoleMapping = () => {
     }
   ];
 
-  const filteredMappings = mappings.filter(mapping => 
+  const enrichedMappings = mappings.map(mapping => {
+    const role = rolesList.find(r => r.RoleCode === mapping.RoleCode);
+    return {
+      ...mapping,
+      CreatedUser: role?.CreatedUser || mapping.CreatedUser || '-',
+      RoleName: role?.RoleName || mapping.RoleName || '-'
+    };
+  });
+
+  const filteredMappings = enrichedMappings.filter(mapping => 
     mapping.RoleName?.toLowerCase().includes(searchQuery.toLowerCase()) || 
     mapping.CreatedUser?.toLowerCase().includes(searchQuery.toLowerCase())
   );
@@ -358,49 +420,53 @@ const UserRoleMapping = () => {
               onChange={handleRoleChange}
               disabled={isEditMode}
               options={rolesList.map(role => ({ label: role.RoleName, value: role.RoleCode }))}
+              getPopupContainer={(triggerNode) => triggerNode.parentNode}
             />
           </div>
           
-          <div className="space-y-1 flex-1 flex flex-col min-h-0">
+          <div className="space-y-1 flex-1 flex flex-col min-h-0 mt-4">
+            <h3 className="font-semibold text-gray-700 mb-2">Company User List</h3>
             <div className="border border-gray-200 rounded-lg flex-1 flex flex-col overflow-hidden bg-white">
               {isUsersLoading ? (
                 <div className="p-8 text-center text-gray-500">Loading users...</div>
               ) : (
                 <>
                   <div className="p-3 border-b border-gray-200 bg-gray-50 flex items-center shrink-0">
-                    <div className="flex-1 font-medium text-gray-700 pl-8">Name</div>
-                    <div className="w-24 text-center font-medium text-gray-700 flex flex-col items-center">
-                      <span className="mb-1 text-xs">Role</span>
+                    <div className="w-28 text-center font-medium text-gray-700 flex items-center gap-2 pl-2">
                       <Checkbox 
                         checked={allRolesChecked}
                         indeterminate={!allRolesChecked && someRolesChecked}
                         onChange={(e) => handleCheckAll('Check_ed', e.target.checked)}
                       />
+                      <span className="text-sm">Check All</span>
                     </div>
-                    <div className="w-24 text-center font-medium text-gray-700 flex flex-col items-center">
-                      <span className="mb-1 text-xs">AddPeerView</span>
+                    <div className="flex-1 font-medium text-gray-700 pl-4">User Login</div>
+                    <div className="w-24 text-center font-medium text-gray-700">Role</div>
+                    <div className="w-32 text-center font-medium text-gray-700 flex items-center justify-center gap-2">
                       <Checkbox 
                         checked={allPeerViewsChecked}
                         indeterminate={!allPeerViewsChecked && somePeerViewsChecked}
                         onChange={(e) => handleCheckAll('Check_PeerView', e.target.checked)}
                       />
+                      <span className="text-sm">AddPeerView</span>
                     </div>
                   </div>
                   
                   <div className="overflow-y-auto flex-1 p-2">
                     {userList.length === 0 ? (
-                      <div className="text-center text-gray-400 py-4">No users available or select a role first.</div>
+                      <div className="text-center text-gray-400 py-4">No users available.</div>
                     ) : (
                       userList.map(user => (
                         <div key={user.UserId} className="flex items-center p-2 hover:bg-gray-50 rounded border-b border-gray-100 last:border-0 transition-colors">
-                          <div className="flex-1 text-gray-700">{user.User_Login_And_Name || user.User_Login || `User ID: ${user.UserId}`}</div>
-                          <div className="w-24 flex justify-center">
+                          <div className="w-28 flex justify-start pl-3">
                             <Checkbox 
                               checked={user.Check_ed}
                               onChange={(e) => handleUserCheck(user.UserId, 'Check_ed', e.target.checked)}
                             />
                           </div>
-                          <div className="w-24 flex justify-center">
+                          <div className="flex-1 text-gray-700 pl-4">{user.User_Login}</div>
+                          <div className="w-24 flex justify-center"></div>
+                          <div className="w-32 flex justify-center">
                             <Checkbox 
                               checked={user.Check_PeerView}
                               onChange={(e) => handleUserCheck(user.UserId, 'Check_PeerView', e.target.checked)}

@@ -80,7 +80,13 @@ const GlobalSubheader = ({
               type="text"
               placeholder={searchPlaceholder}
               value={searchValue}
-              onChange={(e) => setSearchValue(e.target.value)}
+              onChange={(e) => {
+                const val = e.target.value;
+                setSearchValue(val);
+                if (onSearch) {
+                  onSearch({ field: searchField, type: 'text', value: val });
+                }
+              }}
               onKeyDown={handleKeyDown}
               className="subheader-search-input"
               style={searchConfig.length > 0 ? { paddingLeft: '16px', paddingRight: '16px', borderLeft: '1px solid #e2e8f0' } : {}}

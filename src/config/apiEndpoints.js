@@ -43,9 +43,14 @@ export function buildUrl(baseKey, relPath) {
 
 
 
-// ================= MAIN ENDPOINT OBJECT =================
+// ================= HELPER TO BUILD FULL URL =================
+
+const TOKEN = {
+  UNIVERSAL_TOKEN: -2295521862261168
+};
 
 const API_ENDPOINTS = {
+  TOKEN,
   TICKET_SUPPORT: {
     BIND_USERS: '/TicketSupport/BindUsersForLeadPupup'
   },
@@ -58,7 +63,9 @@ const API_ENDPOINTS = {
     LOGOUT: '/UserAuth/Logout',
     REFRESH_TOKEN: '/auth/refresh',
     ME: '/auth/me',
-    CHANGE_PASSWORD: '/auth/change-password'
+    CHANGE_PASSWORD: '/auth/change-password',
+    GET_ROLE_LIST: '/UserAuth/GetRoleList',
+    GET_USER_ROLE_MAPPING_MASTER_LIST_BY_USER_ID: '/UserAuth/GetUserRoleMappingMasterListByUserId'
   },
 
   MODULE_MASTER: {
@@ -257,7 +264,7 @@ const API_ENDPOINTS = {
 
   },
 
-  TOKE: {
+  TOKEN: {
     UNIVERSAL_TOKEN: -2295521862261168
   },
 

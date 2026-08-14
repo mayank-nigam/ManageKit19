@@ -6,9 +6,10 @@ import PremiumTable from '../../../components/common/PremiumTable/PremiumTable';
 import OverlayWidget from '../../../components/common/OverlayWidget/OverlayWidget';
 import GlobalSubheader from '../../../components/common/GlobalSubheader/GlobalSubheader';
 import Alert from '../../../components/common/Alert/Alert';
+import API_ENDPOINTS from '../../../config/apiEndpoints';
 
 const NEWV3_BASE_URL = process.env.REACT_APP_SERVICES_API_BASE_URL || 'http://localhost:62194/';
-const API_TOKEN = localStorage.getItem("API_TOKEN") || process.env.REACT_APP_TOKE_UNIVERSAL_TOKEN || "-2295521862261168";
+const API_TOKEN = API_ENDPOINTS.TOKEN.UNIVERSAL_TOKEN;
 const USER_ID = parseInt(localStorage.getItem("USER_ID")) || 34594;// Using hardcoded ID per existing pattern
 
 const UserRole = () => {
