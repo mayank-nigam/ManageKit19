@@ -28,7 +28,7 @@ const findPageName = (items, path) => {
 
 const WCF_BASE = (process.env.REACT_APP_WCF_API_BASE_URL || '').replace(/\/$/, '');
 const SERVICES_BASE = (process.env.REACT_APP_SERVICES_API_BASE_URL || '').replace(/\/$/, '');
-const AZURE_BASE = (process.env.REACT_APP_SERVICES_AZURE_BASEURL || '').replace(/\/$/, '');
+const AZURE_BASE = (process.env.REACT_APP_SERVICES_API_BASE_URL || '').replace(/\/$/, '');
 
 let globalFetchedCountUserId = null;
 let globalFetchedBannerUserId = null;
