@@ -174,7 +174,6 @@ const FieldMasking = () => {
     const initPlat = platform; // inherit current main list platform
     setDrawerMode('Add');
     setDrawerPlatform(initPlat);
-    setDrawerPlatform(platform);
     setSelectedPage(null);
     setSelectedRole(null);
     setSelectedApp(null);
@@ -189,7 +188,6 @@ const FieldMasking = () => {
   // ---- Open Edit drawer ----------------------------------------------
   const openEditDrawer = async (row) => {
     const editPlat = platform; // inherit from list context
-    setDrawerMode('Edit');
     setDrawerMode('Edit');
     setEditRowId(row.PageHiddenFieldsId);
     setSelectedApp(null);
@@ -219,6 +217,7 @@ const FieldMasking = () => {
         const firstRow = data.Details[0];
         setSelectedPage(firstRow.PageCode || row.PageCode);
         setSelectedRole(firstRow.RoleCode || row.RoleCode);
+        setSelectedApp(firstRow.ApplicationCode || row.ApplicationCode || 'KIT19'); // SET APP CODE
 
         const rows = data.Details.map(f => ({
           ...f,
@@ -309,6 +308,7 @@ const FieldMasking = () => {
           ParentId,
           PageCode: selectedPage,
           RoleCode: selectedRole,
+          ApplicationCode: selectedApp, // INCLUDED APP CODE
           transactions: included.map(f => ({
             PageFieldId: f.PageFieldId,
             HiddenType: f.HiddenType,
@@ -335,6 +335,7 @@ const FieldMasking = () => {
           Mode: drawerMode === 'Add' ? 'I' : 'P',
           PageCode: selectedPage,
           RoleCode: selectedRole,
+          ApplicationCode: selectedApp, // INCLUDED APP CODE
           UserId: userId,
           MaskJson: maskJson,
         };
@@ -400,6 +401,12 @@ const FieldMasking = () => {
       dataIndex: 'TableName',
       sorter: (a, b) => (a.TableName || '').localeCompare(b.TableName || ''),
       render: (v) => <span style={{ fontWeight: 600 }}>{v}</span>,
+    },
+    {
+      title: <div className="flex items-center gap-2" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Monitor size={16} className="text-gray-500" /> App</div>,
+      dataIndex: 'ApplicationCode',
+      sorter: (a, b) => (a.ApplicationCode || '').localeCompare(b.ApplicationCode || ''),
+      render: (v) => <Tag color="purple">{v || 'KIT19'}</Tag>,
     },
     {
       title: <div className="flex items-center gap-2" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Users size={16} className="text-gray-500" /> Role</div>,
@@ -705,6 +712,8 @@ const FieldMasking = () => {
                 disabled={drawerMode === 'Edit'}
               >
                 <Option value="Sales">Sales</Option>
+                <Option value="Marketing">Marketing</Option>
+                <Option value="Whatsapp">WhatsApp</Option>
                 <Option value="KIT19">Management</Option>
               </Select>
             </div>

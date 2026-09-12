@@ -55,8 +55,11 @@ const API_ENDPOINTS = {
     BIND_USERS: '/TicketSupport/BindUsersForLeadPupup'
   },
   BANNER: {
-    banner: '/Common/CommonActionModebased',
-    GET_USER_SEGMENTS: '/BannerSetting/GetSegmentNameList'
+    GET_LIST: '/BannerSetting/GetBannerListByUserId',
+    SAVE: '/BannerSetting/InsertUpdateBannerSetting',
+    UPDATE_BY_MODE: '/BannerSetting/UpdateBannerSettingByMode',
+    GET_USER_SEGMENTS: '/BannerSetting/GetSegmentNameList',
+    GET_BY_ID: '/BannerSetting/GetBannerDetailsById',
   },
   USER_AUTH: {
     LOGIN: '/UserAuth/Login',
@@ -840,6 +843,19 @@ const API_ENDPOINTS = {
   },
 
 
+  // ===================== CHANGE PARTNER REQUEST =====================
+  CHANGE_PARTNER_REQUEST: {
+    GET_RECORDS: '/Partner/ChangePartnerRequestRecords',
+    SAVE_ACTION: '/Partner/SaveChangePartnerRequest',
+    LOAD_PARTNER_LIST: '/Partner/LoadPartnerList',
+  },
+
+  // ===================== SNAPSHOTS =====================
+  SNAPSHOTS: {
+    GET_LIST_BY_USER_ID: '/SnapshotSetting/GetSnapshotListByUserId',
+    GET_LIST: '/SnapshotSetting/GetSnapshotList',
+  },
+
   // ===================== REPORTS =====================
   REPORTS: {
     // Followup Report
@@ -853,6 +869,57 @@ const API_ENDPOINTS = {
     // Mass Operation Report
     GET_MASS_OPERATION_STATUS: '/Dashboard/GetMassOperationStatus',
     GET_MASS_OPERATION_BATCH_ID: '/UserCRM/GetMassOperationBatchId',
+  },
+
+  LICENCE_TRANSACTION: {
+    GET_LIST: '/UserCRM/getLicenceTransaction',
+    GET_MONTHLY_BALANCE: '/UserCRM/getLicenceCount',
+    GET_ANNUAL_BALANCE: '/UserCRM/getLicenceCountAnnual',
+    ADD: '/UserCRM/AddLicenceTransaction',
+    GET_USERS_LIST: '/UserCRM/getUsersList',
+  },
+
+  IMPERSONATION_REQUEST: {
+    GET_LIST: '/Partner/GetImpRequestList',
+    APPROVE_REJECT: '/Partner/ImpersonationApproveRejectRequest',
+    LOAD_PARTNER_LIST: '/Partner/LoadPartnerList',
+  },
+
+  RESERVE_FUND: {
+    GET_BY_USER_ID: '/ReserveFund/GetReserveFundByUserId',
+    GET_AUDIT_LOG: '/ReserveFund/GetAuditLogListByUserId',
+    GET_CREDIT_NAME_LIST: '/ReserveFund/GeCreditNameList',
+    GET_DETAILS_BY_ID: '/ReserveFund/GetReserveFundDetailsById',
+    INSERT_UPDATE: '/ReserveFund/InsertUpdateReserveFund',
+    USER_SUGGESTIONS: '/Partner/ImpersonationSuggestions',
+  },
+
+  VERIFY_KYC: {
+    GET_LIST: '/UserKyc/GetKycRequestList',
+    GET_DOCUMENTS_BY_ID: '/UserKyc/GetUploadKycListById',
+    GET_DOCUMENT_TYPES: '/UserKyc/KycGetDocumentType',
+    KYC_OPERATION: '/UserKyc/KycOperationByMode',
+  },
+
+  CUSTOMIZATION: {
+    LOAD_DETAILS: '/Partner/LoadPartnerCustomDetail',
+    SAVE_WEB_PORTAL: '/UserCRM/SaveCustomization',
+    SAVE_EMAIL: '/UserCRM/SaveCustomizationEmail',
+    SAVE_MOBILE: '/UserCRM/SaveCustomizationMobile',
+    GET_RESELLER_ID: '/UserCRM/GetResellerIdByUserId',
+    CHECK_DOMAIN_EXISTENCE: '/UserCRM/getDomainExistence',
+    GET_DOMAIN_KEY: '/UserCRM/getDomainKey',
+    SAVE_DOMAIN_KEY: '/UserCRM/SaveDomainKey',
+    UPDATE_DOMAIN_KEY: '/UserCRM/UpdateDomainKey',
+    UPDATE_DOMAIN_STATUS: '/UserCRM/UpdateDomainStatus',
+    GET_DOMAIN_STATUS: '/UserCRM/getDomainStatus',
+    VERIFY_DOMAIN: '/Customization/VerifyDomain',
+    GET_SMS_BY_CATEGORY: '/UserCRM/GetByCategory',
+    GET_SMS_SENDER_ID: '/UserCRM/GetSmsSenderID',
+    GET_SMS_TEMPLATE: '/UserCRM/GetSmsTemplate',
+    CHANGE_DLT_STATUS: '/UserCRM/ChangeDltStatus',
+    FILE_UPLOAD: '/partner/Handler/FileUploadHandler.ashx',
+    GET_FROM_MAIL_ID: '/UserCRM/GetFromMailId',
   },
 
 };

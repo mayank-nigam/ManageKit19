@@ -4,7 +4,7 @@ import API_ENDPOINTS from '../config/apiEndpoints';
 import {
   FiHome, FiUsers, FiUserPlus, FiCalendar, FiPhone, FiTarget,
   FiCheckSquare, FiMapPin, FiActivity, FiStar, FiTrello, FiClock,
-  FiFileText, FiDollarSign, FiCreditCard, FiBook, FiChevronRight, FiSettings, FiLayout, FiTrendingUp, FiFile, FiPercent, FiImage, FiRadio, FiLink, FiShield
+  FiFileText, FiDollarSign, FiCreditCard, FiBook, FiChevronRight, FiSettings, FiLayout, FiTrendingUp, FiFile, FiPercent, FiImage, FiRadio, FiLink, FiShield, FiCamera
 } from 'react-icons/fi';
 import { CopyPlus, ListFilterPlus, Merge } from 'lucide-react';
 
@@ -123,7 +123,21 @@ const MENU_MAPPING = {
   'Field Masking': { name: 'Field Masking', href: '/roles/field-masking', icon: FiLayout },
   // 'Collaborator Team': { name: 'Collaborator Team', href: '/master-settings/collaborator-team', icon: FiUsers },
   // 'CollaboratorType': { name: 'CollaboratorType', href: '/master-settings/collaborator-type', icon: FiUsers },
-  'User Hierarchy': { name: 'User Hierarchy', href: '/master-settings/user-hierarchy', icon: FiUsers }
+  'User Hierarchy': { name: 'User Hierarchy', href: '/master-settings/user-hierarchy', icon: FiUsers },
+
+  'Partner': { name: 'Partner', href: '#', icon: FiUsers },
+  'Manage User': { name: 'Manage User', href: '/partner/manage-user', icon: FiUserPlus },
+  'User Segmentation': { name: 'User Segmentation', href: '/partner/user-segmentation', icon: FiLayout },
+  'Snapshots': { name: 'Snapshots', href: '/partner/snapshots', icon: FiCamera },
+  'Change Partner Requests': { name: 'Change Partner Requests', href: '/partner/change-partner-request', icon: FiLink },
+  'Licence Transaction': { name: 'Licence Transaction', href: '/partner/licence-transaction', icon: FiCreditCard },
+  'Impersonation Request Received': { name: 'Impersonation Request Received', href: '/partner/impersonation-request-received', icon: FiUsers },
+  'Partner Settings': { name: 'Partner Settings', href: '#', icon: FiSettings },
+  'Banner': { name: 'Banner', href: '/partner/banner', icon: FiImage },
+  'Customization': { name: 'Customization', href: '/partner/customization', icon: FiSettings },
+  'Team Roles': { name: 'Team Roles', href: '#', icon: FiShield },
+  'Reserve Fund': { name: 'Reserve Fund', href: '/partner/reserve-fund', icon: FiDollarSign },
+  'Verify KYC': { name: 'Verify KYC', href: '/partner/verify-kyc', icon: FiCheckSquare }
 };
 
 const NavigationContext = createContext();
@@ -288,6 +302,58 @@ export const NavigationProvider = ({ children }) => {
            }
         }
 
+        // Dynamically append Partner from API, fallback to a hardcoded "Manage User"
+        // subtree otherwise - same pattern as the Roles & Rights block above, except
+        // shown unconditionally (no userId gate) since this is currently in broad
+        // review rather than restricted to specific test accounts.
+        const partnerFallbackSubItems = [
+          { name: 'Manage User', href: '/partner/manage-user', icon: FiUserPlus },
+          { name: 'User Segmentation', href: '/partner/user-segmentation', icon: FiLayout },
+          { name: 'Snapshots', href: '/partner/snapshots', icon: FiCamera },
+          { name: 'Change Partner Requests', href: '/partner/change-partner-request', icon: FiLink },
+          { name: 'Licence Transaction', href: '/partner/licence-transaction', icon: FiCreditCard },
+          { name: 'Impersonation Request Received', href: '/partner/impersonation-request-received', icon: FiUsers }
+        ];
+        const partnerModule = parsedList.find(m => (m.childName || m.Title) === 'Partner');
+        if (partnerModule) {
+          const subItems = buildMenuTree(partnerModule.childId ?? partnerModule.MenuId, partnerModule.childName || partnerModule.Title);
+          finalNav.push({
+            name: 'Partner',
+            icon: FiUsers,
+            href: '#',
+            subItems: subItems.length > 0 ? subItems : partnerFallbackSubItems
+          });
+        } else {
+          finalNav.push({
+            name: 'Partner',
+            icon: FiUsers,
+            href: '#',
+            subItems: partnerFallbackSubItems
+          });
+        }
+
+        // Partner Settings menu
+        finalNav.push({
+          name: 'Partner Settings',
+          icon: FiSettings,
+          href: '#',
+          subItems: [
+            { name: 'Banner', href: '/partner/banner', icon: FiImage },
+            { name: 'Customization', href: '/partner/customization', icon: FiSettings },
+            { name: 'Reserve Fund', href: '/partner/reserve-fund', icon: FiDollarSign },
+            { name: 'Verify KYC', href: '/partner/verify-kyc', icon: FiCheckSquare },
+            {
+              name: 'Team Roles',
+              icon: FiShield,
+              href: '#',
+              subItems: [
+                { name: 'User Role Mapping', href: '/partner/team-role-mapping', icon: FiLink },
+                { name: 'Role Master', href: '/partner/role-master', icon: FiUserPlus }
+              ]
+            }
+          ]
+        });
+
         setNavigation(finalNav);
 
         const routes = [];
@@ -310,7 +376,19 @@ export const NavigationProvider = ({ children }) => {
            '/roles/module-master',
            '/banner',
            '/updates',
-           '/help'
+           '/help',
+'/partner/manage-user',
+            '/partner/user-segmentation',
+            '/partner/snapshots',
+            '/partner/change-partner-request',
+            '/partner/licence-transaction',
+            '/partner/impersonation-request-received',
+              '/partner/banner',
+              '/partner/customization',
+              '/partner/reserve-fund',
+              '/partner/verify-kyc',
+              '/partner/team-role-mapping',
+             '/partner/role-master'
         ];
 
         setAllowedRoutes([...routes, ...settingRoutes]);

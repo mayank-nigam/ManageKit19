@@ -417,7 +417,7 @@ const CollaboratorType = () => {
           loading={loading}
           onChange={handleTableChange}
           className="tax-settings-table"
-          locale={{ emptyText: <div className="py-8 text-gray-500 text-center"><div className="mb-2">No record Found.</div><button onClick={handleAddNew} className="text-blue-600 hover:underline">Click here to add your first type</button></div> }}
+          locale={{ emptyText: <div style={{ padding: '40px 0', textAlign: 'center' }}><img src="/nodata.gif" alt="No Data Available" style={{ maxWidth: '250px', margin: '0 auto 10px auto', display: 'block' }} /><div style={{ color: '#666', fontWeight: 500 }}>No record Found.</div><button onClick={handleAddNew} className="text-blue-600 hover:underline mt-2">Click here to add your first type</button></div> }}
         />
       </div>
 

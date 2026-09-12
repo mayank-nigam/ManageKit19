@@ -17,6 +17,16 @@ import UserRoleMapping from './pages/RolesAndRights/UserRoleMapping/UserRoleMapp
 import RolePermissionMapping from './pages/RolesAndRights/RolePermissionMapping/RolePermissionMapping';
 import ModuleMaster from './pages/RolesAndRights/ModuleMaster/ModuleMaster';
 import FieldMasking from './pages/RolesAndRights/FieldMasking/FieldMasking';
+import ManageUser from './pages/Partner/ManageUser/ManageUser';
+import UserSegmentation from './pages/Partner/UserSegmentation/UserSegmentation';
+import SnapshotList from './pages/Partner/Snapshots/SnapshotList';
+import ChangePartnerRequest from './pages/Partner/ChangePartnerRequest/ChangePartnerRequest';
+import LicenceTransaction from './pages/Partner/LicenceTransaction/LicenceTransaction';
+import ImpersonationRequestReceived from './pages/Partner/ImpersonationRequest/ImpersonationRequestReceived';
+import Customization from './pages/Partner/Customization/Customization';
+import ReserveFund from './pages/Partner/ReserveFund/ReserveFund';
+import VerifyKYC from './pages/Partner/VerifyKYC/VerifyKYC';
+import BannerList from './pages/Partner/Banner/BannerList';
 // import CollaboratorTeam from './pages/RolesAndRights/CollaboratorTeam/CollaboratorTeam';
 // import CollaboratorType from './pages/RolesAndRights/CollaboratorType/CollaboratorType';
 
@@ -53,6 +63,18 @@ function App() {
               <Route path="roles/user-role-mapping" element={<UserRoleMapping />} />
               <Route path="roles/field-masking" element={<FieldMasking />} />
               <Route path="roles/module-master" element={<ModuleMaster />} />
+              <Route path="partner/manage-user" element={<ManageUser />} />
+              <Route path="partner/user-segmentation" element={<UserSegmentation />} />
+              <Route path="partner/snapshots" element={<SnapshotList />} />
+              <Route path="partner/change-partner-request" element={<ChangePartnerRequest />} />
+              <Route path="partner/licence-transaction" element={<LicenceTransaction />} />
+              <Route path="partner/impersonation-request-received" element={<ImpersonationRequestReceived />} />
+              <Route path="partner/banner" element={<BannerList />} />
+              <Route path="partner/customization" element={<Customization />} />
+              <Route path="partner/reserve-fund" element={<ReserveFund />} />
+              <Route path="partner/verify-kyc" element={<VerifyKYC />} />
+              <Route path="partner/team-role-mapping" element={<UserRoleMapping />} />
+              <Route path="partner/role-master" element={<UserRole />} />
               {/* <Route path="master-settings/collaborator-team" element={<CollaboratorTeam />} /> */}
               {/* <Route path="master-settings/collaborator-type" element={<CollaboratorType />} /> */}
               {/* Add more admin routes here */}
